@@ -3,16 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Andrea Korkeamaki | Creative Portfolio</title>
+    <title>Andrea Korkeamaki | Minimalist Portfolio</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100;300;400;500&family=Noto+Serif+JP:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-primary: 'Noto Serif JP', serif;
+            --font-secondary: 'Noto Sans JP', sans-serif;
+        }
+    </style>
 </head>
 <body>
     <div class="loader">
-        <div class="loader-text">Andrea Korkeamaki</div>
+        <div class="loader-text">アンドレア</div>
     </div>
 
     <div class="noise"></div>
@@ -38,33 +44,29 @@
         <!-- Hero Section -->
         <section id="home" class="hero">
             <div class="container">
-                <h1 class="glitch" data-text="Andrea Korkeamaki">Andrea Korkeamaki</h1>
+                <h1>Andrea Korkeamaki</h1>
                 <div class="hero-subtitle">
                     <div class="text-reveal">
-                        <span class="text-reveal-mask"></span>
                         <span class="text-reveal-content">Graphic Designer</span>
                     </div>
                     <div class="text-reveal">
-                        <span class="text-reveal-mask"></span>
                         <span class="text-reveal-content">Creative Coder</span>
                     </div>
                     <div class="text-reveal">
-                        <span class="text-reveal-mask"></span>
                         <span class="text-reveal-content">3D Artist</span>
                     </div>
                 </div>
                 <div class="scroll-indicator">
-                    <span>Scroll Down</span>
+                    <span>Scroll</span>
                     <i class="fas fa-arrow-down"></i>
                 </div>
             </div>
-            <div class="hero-visual" id="hero-canvas"></div>
         </section>
 
         <!-- About Section -->
         <section id="about" class="about">
             <div class="container">
-                <h2 class="section-title">About Me</h2>
+                <h2 class="section-title">About</h2>
                 <div class="about-content">
                     <div class="about-text">
                         <p>Hello, I'm Andrea Korkeamaki — a multidisciplinary artist working at the intersection of graphic design, creative coding, and 3D art. I create immersive digital experiences that merge technical precision with artistic vision.</p>
@@ -112,7 +114,7 @@
         <!-- Work Section -->
         <section id="work" class="work">
             <div class="container">
-                <h2 class="section-title">Selected Works</h2>
+                <h2 class="section-title">Works</h2>
                 <div class="work-filters">
                     <button class="filter-btn active" data-filter="all">All</button>
                     <button class="filter-btn" data-filter="design">Design</button>
@@ -210,24 +212,14 @@
         <!-- Contact Section -->
         <section id="contact" class="contact">
             <div class="container">
-                <h2 class="section-title">Get in Touch</h2>
+                <h2 class="section-title">Contact</h2>
                 <div class="contact-content">
                     <div class="contact-info">
-                        <h3>Let's work together</h3>
-                        <p>I'm always open to discussing new projects, creative ideas or opportunities to be part of your visions.</p>
+                        <h3>Get in Touch</h3>
                         <div class="contact-details">
-                            <div class="contact-item">
-                                <i class="fas fa-envelope"></i>
-                                <a href="mailto:hello@andreakorkeamaki.com">hello@andreakorkeamaki.com</a>
-                            </div>
-                            <div class="contact-item">
-                                <i class="fas fa-phone"></i>
-                                <a href="tel:+123456789">+12 345 6789</a>
-                            </div>
-                            <div class="contact-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>Helsinki, Finland</span>
-                            </div>
+                            <p>Feel free to reach out for collaborations, inquiries, or just to say hello.</p>
+                            <p>Email: hello@andreakorkeamaki.com</p>
+                            <p>Location: Helsinki, Finland</p>
                         </div>
                         <div class="social-links">
                             <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
@@ -237,31 +229,20 @@
                         </div>
                     </div>
                     <div class="contact-form">
-                        <form id="contact-form">
+                        <form id="contactForm">
                             <div class="form-group">
-                                <input type="text" id="name" name="name" required>
-                                <label for="name">Your Name</label>
-                                <div class="form-line"></div>
+                                <label for="name">Name</label>
+                                <input type="text" id="name" required>
                             </div>
                             <div class="form-group">
-                                <input type="email" id="email" name="email" required>
-                                <label for="email">Your Email</label>
-                                <div class="form-line"></div>
+                                <label for="email">Email</label>
+                                <input type="email" id="email" required>
                             </div>
                             <div class="form-group">
-                                <input type="text" id="subject" name="subject" required>
-                                <label for="subject">Subject</label>
-                                <div class="form-line"></div>
+                                <label for="message">Message</label>
+                                <textarea id="message" required></textarea>
                             </div>
-                            <div class="form-group">
-                                <textarea id="message" name="message" required></textarea>
-                                <label for="message">Your Message</label>
-                                <div class="form-line"></div>
-                            </div>
-                            <button type="submit" class="submit-btn">
-                                <span>Send Message</span>
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
+                            <button type="submit" class="submit-btn">Send Message</button>
                         </form>
                     </div>
                 </div>
@@ -273,15 +254,17 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-logo">AK</div>
-                <p>&copy; 2025 Andrea Korkeamaki. All Rights Reserved.</p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Privacy</a>
+                    <a href="#" class="footer-link">Terms</a>
+                </div>
+                <div class="copyright">&copy; 2025 Andrea Korkeamaki. All rights reserved.</div>
             </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/ScrollTrigger.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.159.0/three.min.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
