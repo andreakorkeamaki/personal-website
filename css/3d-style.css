@@ -1,0 +1,397 @@
+/* 3D World Portfolio Game Styles */
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-color: #007bff;
+  --accent-color: #00bfff;
+  --background-color: #f5f5f5;
+  --text-color: #333;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.webgl {
+  position: fixed;
+  top: 0;
+  left: 0;
+  outline: none;
+  z-index: 1;
+}
+
+/* Loading Screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--background-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-logo {
+  font-family: var(--font-primary);
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  letter-spacing: 0.5rem;
+  color: var(--text-color);
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+.loading-bar-container {
+  width: 300px;
+  height: 4px;
+  background-color: rgba(0, 123, 255, 0.2);
+  border-radius: 2px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.loading-bar {
+  height: 100%;
+  width: 100%;
+  background-color: var(--primary-color);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s;
+}
+
+.loader-text {
+  font-size: 1.2rem;
+  letter-spacing: 0.5rem;
+  color: var(--primary-color);
+  font-weight: 300;
+}
+
+.enter-experience {
+  margin-top: 2rem;
+  padding: 1rem 2rem;
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--text-color);
+  font-family: var(--font-secondary);
+  font-size: 1rem;
+  letter-spacing: 0.2rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: none;
+  opacity: 0;
+}
+
+.enter-experience:hover {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+}
+
+/* Interface Elements */
+.interface {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.interface > * {
+  pointer-events: auto;
+}
+
+.top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  color: var(--text-color);
+  text-decoration: none;
+  letter-spacing: 0.2rem;
+}
+
+.nav {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-item {
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  color: #aaaaaa;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  padding: 0.5rem 0;
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: var(--primary-color);
+}
+
+.world-info {
+  position: absolute;
+  bottom: 2rem;
+  left: 2rem;
+  max-width: 300px;
+}
+
+.world-title {
+  font-family: var(--font-primary);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.2rem;
+}
+
+.world-description {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #aaaaaa;
+}
+
+.back-to-hub {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2rem;
+  color: var(--text-color);
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: none;
+}
+
+.back-to-hub:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Portal Labels & Project Info */
+.portal-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  letter-spacing: 0.2rem;
+  text-align: center;
+  text-shadow: 0 0 10px currentColor;
+  pointer-events: none;
+}
+
+.project-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-width: 250px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.project-label h3 {
+  font-family: var(--font-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1rem;
+}
+
+.project-label p {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #aaaaaa;
+}
+
+/* Project Modal */
+.project-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 8, 23, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 2rem;
+  width: 90%;
+  max-width: 600px;
+  display: none;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.project-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.project-modal-title {
+  font-family: var(--font-primary);
+  font-size: 2rem;
+  letter-spacing: 0.2rem;
+}
+
+.project-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.project-modal-category {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.project-modal-description {
+  line-height: 1.8;
+  margin-bottom: 2rem;
+  color: #cccccc;
+}
+
+.project-modal-cta {
+  padding: 1rem 2rem;
+  background-color: var(--primary-color);
+  border: none;
+  border-radius: 2rem;
+  color: var(--background-color);
+  font-family: var(--font-secondary);
+  font-size: 1rem;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: center;
+}
+
+.project-modal-cta:hover {
+  background-color: var(--accent-color);
+}
+
+/* Scroll animations */
+[data-scroll] {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 0.6s ease;
+}
+
+[data-scroll="in"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Minimalist tech styling */
+.tech-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 2rem;
+  margin: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tech-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.accent {
+  color: var(--accent-color);
+}
+
+.btn {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .nav {
+    display: none;
+  }
+  
+  .world-info {
+    bottom: 6rem;
+    left: 1.5rem;
+  }
+  
+  .back-to-hub {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+  
+  .project-label {
+    max-width: 200px;
+  }
+}

@@ -15,112 +15,39 @@
             --font-secondary: 'Noto Sans JP', sans-serif;
         }
     </style>
+    <script>
+        // Redirect to 3D portfolio
+        window.location.href = '3d-portfolio.html';
+    </script>
 </head>
 <body>
-    <div class="loader">
-        <div class="loader-text">アンドレア</div>
+    <div class="loading-screen">
+        <div class="loading-bar-container">
+            <div class="loading-bar"></div>
+        </div>
+        <div class="loader-text">LOADING</div>
     </div>
 
     <div class="noise"></div>
 
-    <header>
-        <nav>
-            <div class="logo">AK</div>
-            <div class="menu-toggle">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-            </div>
-            <ul class="nav-links">
-                <li><a href="#home" class="nav-link">Home</a></li>
-                <li><a href="#about" class="nav-link">About</a></li>
-                <li><a href="#work" class="nav-link">Work</a></li>
-                <li><a href="#contact" class="nav-link">Contact</a></li>
-            </ul>
-        </nav>
+    <header data-scroll>
+        <h1>Andrea Korkeamaki <span class="accent">/</span> Tech Portfolio</h1>
+        <p>Building innovative solutions with modern technology</p>
+        <a href="#projects" class="btn">View Projects</a>
     </header>
 
     <main>
-        <!-- Hero Section -->
-        <section id="home" class="hero">
-            <div class="container">
-                <h1>Andrea Korkeamaki</h1>
-                <div class="hero-subtitle">
-                    <div class="text-reveal">
-                        <span class="text-reveal-content">Graphic Designer</span>
-                    </div>
-                    <div class="text-reveal">
-                        <span class="text-reveal-content">Creative Coder</span>
-                    </div>
-                    <div class="text-reveal">
-                        <span class="text-reveal-content">3D Artist</span>
-                    </div>
-                </div>
-                <div class="scroll-indicator">
-                    <span>Scroll</span>
-                    <i class="fas fa-arrow-down"></i>
-                </div>
+        <section id="about" data-scroll>
+            <div class="tech-card">
+                <h2>About Me</h2>
+                <p>Hello, I'm Andrea Korkeamaki — a multidisciplinary artist working at the intersection of graphic design, creative coding, and 3D art. I create immersive digital experiences that merge technical precision with artistic vision.</p>
             </div>
         </section>
 
-        <!-- About Section -->
-        <section id="about" class="about">
-            <div class="container">
-                <h2 class="section-title">About</h2>
-                <div class="about-content">
-                    <div class="about-text">
-                        <p>Hello, I'm Andrea Korkeamaki — a multidisciplinary artist working at the intersection of graphic design, creative coding, and 3D art. I create immersive digital experiences that merge technical precision with artistic vision.</p>
-                        <p>My approach combines traditional design principles with cutting-edge technology to craft visually stunning and interactive projects that push creative boundaries.</p>
-                        <div class="skills">
-                            <div class="skill-category">
-                                <h3>Design</h3>
-                                <ul>
-                                    <li>Visual Identity</li>
-                                    <li>Typography</li>
-                                    <li>UI/UX Design</li>
-                                    <li>Motion Graphics</li>
-                                </ul>
-                            </div>
-                            <div class="skill-category">
-                                <h3>Code</h3>
-                                <ul>
-                                    <li>Creative Coding</li>
-                                    <li>Interactive Installations</li>
-                                    <li>Generative Art</li>
-                                    <li>Web Development</li>
-                                </ul>
-                            </div>
-                            <div class="skill-category">
-                                <h3>3D</h3>
-                                <ul>
-                                    <li>3D Modeling</li>
-                                    <li>Animation</li>
-                                    <li>Texture Design</li>
-                                    <li>Virtual Environments</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="about-image">
-                        <div class="image-container">
-                            <img src="img/profile.jpg" alt="Andrea Korkeamaki" class="profile-image">
-                            <div class="image-overlay"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Work Section -->
-        <section id="work" class="work">
-            <div class="container">
-                <h2 class="section-title">Works</h2>
-                <div class="work-filters">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="design">Design</button>
-                    <button class="filter-btn" data-filter="code">Code</button>
-                    <button class="filter-btn" data-filter="3d">3D</button>
-                </div>
+        <section id="projects" data-scroll>
+            <div class="tech-card">
+                <h2>Featured Projects</h2>
+                <!-- Project items here -->
                 <div class="work-grid">
                     <!-- Project 1 -->
                     <div class="work-item" data-category="design">
@@ -209,43 +136,11 @@
             </div>
         </section>
 
-        <!-- Contact Section -->
-        <section id="contact" class="contact">
-            <div class="container">
-                <h2 class="section-title">Contact</h2>
-                <div class="contact-content">
-                    <div class="contact-info">
-                        <h3>Get in Touch</h3>
-                        <div class="contact-details">
-                            <p>Feel free to reach out for collaborations, inquiries, or just to say hello.</p>
-                            <p>Email: hello@andreakorkeamaki.com</p>
-                            <p>Location: Helsinki, Finland</p>
-                        </div>
-                        <div class="social-links">
-                            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-behance"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-github"></i></a>
-                            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-                        </div>
-                    </div>
-                    <div class="contact-form">
-                        <form id="contactForm">
-                            <div class="form-group">
-                                <label for="name">Name</label>
-                                <input type="text" id="name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" id="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="message">Message</label>
-                                <textarea id="message" required></textarea>
-                            </div>
-                            <button type="submit" class="submit-btn">Send Message</button>
-                        </form>
-                    </div>
-                </div>
+        <section id="contact" data-scroll>
+            <div class="tech-card">
+                <h2>Get in Touch</h2>
+                <p>Let's collaborate on your next project</p>
+                <a href="mailto:hello@andreakorkeamaki.com" class="btn">Contact Me</a>
             </div>
         </section>
     </main>

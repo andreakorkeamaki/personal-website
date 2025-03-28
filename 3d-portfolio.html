@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andrea Korkeamaki | 3D Portfolio Experience</title>
+    <link rel="stylesheet" href="css/3d-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-primary: 'Roboto', sans-serif;
+            --font-secondary: 'Roboto', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen">
+        <div class="loading-bar-container">
+            <div class="loading-bar"></div>
+        </div>
+        <div class="loader-text">LOADING</div>
+        <button class="enter-experience">ENTER EXPERIENCE</button>
+    </div>
+
+    <!-- 3D Canvas -->
+    <canvas class="webgl"></canvas>
+
+    <!-- Interface Elements -->
+    <div class="interface">
+        <div class="top-bar">
+            <a href="index.html" class="logo">AK</a>
+            <div class="nav">
+                <div class="nav-item active">Experience</div>
+                <div class="nav-item">About</div>
+                <div class="nav-item">Contact</div>
+            </div>
+        </div>
+
+        <div class="world-info">
+            <h2 class="world-title">HUB</h2>
+            <p class="world-description">Welcome to my interactive portfolio. Navigate through different worlds to explore my projects in design, code, and 3D art. Click on portals to travel between worlds.</p>
+        </div>
+
+        <button class="back-to-hub">Back to Hub</button>
+    </div>
+
+    <!-- Project Modal -->
+    <div class="project-modal">
+        <div class="project-modal-header">
+            <h2 class="project-modal-title">Project Title</h2>
+            <button class="project-modal-close">&times;</button>
+        </div>
+        <div class="project-modal-category">CATEGORY</div>
+        <p class="project-modal-description">Project description will appear here with details about the work, technologies used, and the creative process behind it.</p>
+        <button class="project-modal-cta">View Full Project</button>
+    </div>
+
+    <!-- Scripts -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./node_modules/three/build/three.module.js",
+                "three/examples/jsm/controls/OrbitControls.js": "./node_modules/three/examples/jsm/controls/OrbitControls.js",
+                "three/examples/jsm/loaders/GLTFLoader.js": "./node_modules/three/examples/jsm/loaders/GLTFLoader.js",
+                "three/examples/jsm/loaders/DRACOLoader.js": "./node_modules/three/examples/jsm/loaders/DRACOLoader.js",
+                "three/examples/jsm/postprocessing/EffectComposer.js": "./node_modules/three/examples/jsm/postprocessing/EffectComposer.js",
+                "three/examples/jsm/postprocessing/RenderPass.js": "./node_modules/three/examples/jsm/postprocessing/RenderPass.js",
+                "three/examples/jsm/postprocessing/UnrealBloomPass.js": "./node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js",
+                "three/examples/jsm/postprocessing/ShaderPass.js": "./node_modules/three/examples/jsm/postprocessing/ShaderPass.js",
+                "cannon-es": "./node_modules/cannon-es/dist/cannon-es.js",
+                "gsap": "./node_modules/gsap/index.js"
+            }
+        }
+    </script>
+    <script type="module">
+        import { World } from './js/world.js';
+        import { gsap } from 'gsap';
+
+        // Initialize experience on DOM content loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize loading animations
+            gsap.to('.loader-text', {
+                opacity: 1,
+                y: 0,
+                duration: 1,
+                ease: 'power3.out',
+                delay: 0.3
+            });
+
+            // Handle enter experience button
+            const enterBtn = document.querySelector('.enter-experience');
+            enterBtn.addEventListener('click', () => {
+                // Hide loading screen
+                gsap.to('.loading-screen', {
+                    opacity: 0,
+                    duration: 1,
+                    ease: 'power3.inOut',
+                    onComplete: () => {
+                        document.querySelector('.loading-screen').style.display = 'none';
+                    }
+                });
+            });
+
+            // Initialize 3D world
+            const world = new World();
+
+            // Handle back to hub button
+            const backToHubBtn = document.querySelector('.back-to-hub');
+            backToHubBtn.addEventListener('click', () => {
+                world.navigateToWorld('hub');
+            });
+
+            // Handle modal close button
+            const modalCloseBtn = document.querySelector('.project-modal-close');
+            modalCloseBtn.addEventListener('click', () => {
+                const modal = document.querySelector('.project-modal');
+                gsap.to(modal, {
+                    opacity: 0,
+                    duration: 0.3,
+                    ease: 'power2.in',
+                    onComplete: () => {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+
+            // Handle navigation items
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    // Remove active class from all items
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+
+                    // Handle navigation
+                    if (index === 0) { // Experience
+                        // Already in experience view
+                    } else if (index === 1) { // About
+                        window.location.href = 'index.html#about';
+                    } else if (index === 2) { // Contact
+                        window.location.href = 'index.html#contact';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
