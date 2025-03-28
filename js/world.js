@@ -111,14 +111,17 @@ export class World {
             loadingBar.style.transform = `scaleX(${progress})`;
         };
         
+        // Force complete loading after timeout to prevent hanging
+        setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.pointerEvents = 'none';
+            this.initScrollAnimations();
+        }, 3000);
+        
         loadingManager.onLoad = () => {
-            setTimeout(() => {
-                loadingScreen.style.opacity = '0';
-                loadingScreen.style.pointerEvents = 'none';
-                
-                // Initialize scroll animations after loading
-                this.initScrollAnimations();
-            }, 1000);
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.pointerEvents = 'none';
+            this.initScrollAnimations();
         };
         
         return loadingManager;

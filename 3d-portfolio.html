@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Andrea Korkeamaki - Interactive 3D Portfolio Experience showcasing creative projects">
+    <meta name="theme-color" content="#007bff">
     <title>Andrea Korkeamaki | 3D Portfolio Experience</title>
     <link rel="stylesheet" href="css/3d-style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -15,6 +17,15 @@
             --font-secondary: 'Roboto', sans-serif;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Force the loading screen to disappear after 3 seconds
+            setTimeout(function() {
+                document.querySelector('.loading-screen').style.opacity = '0';
+                document.querySelector('.loading-screen').style.pointerEvents = 'none';
+            }, 3000);
+        });
+    </script>
 </head>
 <body>
     <!-- Loading Screen -->
