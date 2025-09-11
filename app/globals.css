@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #__next {
+  height: 100%;
+}
+
+body { background-color: #0F0E0E; color: #FFFDF6; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+.text-shadow-soft {
+  text-shadow: 0 2px 18px rgba(0,0,0,0.35);
+}
+
+.gradient-accent {
+  background: radial-gradient(60% 80% at 50% 20%, rgba(77,168,218,0.15) 0%, rgba(70,138,154,0.12) 35%, rgba(82,53,123,0.10) 70%, transparent 100%);
+}
