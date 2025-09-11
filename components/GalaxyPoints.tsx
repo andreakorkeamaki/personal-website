@@ -77,6 +77,7 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
 
   const buildShapes = (offset: number) => {
     const count = finalCount;
+    const ak = new Float32Array(count * 3);
     const sphere = new Float32Array(count * 3);
     const torus = new Float32Array(count * 3);
     const helix = new Float32Array(count * 3);
@@ -86,6 +87,77 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
       const u = rnd(i, 1 + offset);
       const v = rnd(i, 2 + offset);
       const w = rnd(i, 3 + offset);
+
+      // "AK" letters built from simple stroke segments in XY plane
+      // Layout params
+      const H = 4.0; // letter height
+      const WA = 1.8; // A width
+      const WK = 1.8; // K width
+      const gap = 0.9; // spacing between letters
+      const ax = - (WA * 0.5 + gap * 0.5); // center X for A
+      const kx =   (WK * 0.5 + gap * 0.5); // center X for K
+      const jitter = 0.06; // thickness jitter
+
+      // Choose letter and stroke based on rnd
+      const chooseLetter = v < 0.5 ? 'A' : 'K';
+      const tStroke = u; // position along stroke
+      const r1 = rnd(i, 7 + offset);
+      const r2 = rnd(i, 8 + offset);
+      const jx = (r1 - 0.5) * jitter;
+      const jy = (r2 - 0.5) * jitter;
+      const jz = (w - 0.5) * 0.2;
+
+      let px = 0, py = 0, pz = jz;
+      if (chooseLetter === 'A') {
+        // A strokes: left diag, right diag, crossbar
+        // Points of the A in local space around (0,0)
+        const A_top = new THREE.Vector2(0, H * 0.5);
+        const A_left = new THREE.Vector2(-WA * 0.5, -H * 0.5);
+        const A_right = new THREE.Vector2(WA * 0.5, -H * 0.5);
+        const A_barL = new THREE.Vector2(-WA * 0.25, 0);
+        const A_barR = new THREE.Vector2(WA * 0.25, 0);
+
+        // pick stroke
+        const sPick = rnd(i, 9 + offset);
+        let from = A_left, to = A_top;
+        if (sPick < 1 / 3) {
+          // left diagonal
+          from = A_left; to = A_top;
+        } else if (sPick < 2 / 3) {
+          // right diagonal
+          from = A_right; to = A_top;
+        } else {
+          // crossbar
+          from = A_barL; to = A_barR;
+        }
+        px = ax + from.x + (to.x - from.x) * tStroke + jx;
+        py = from.y + (to.y - from.y) * tStroke + jy;
+      } else {
+        // K strokes: vertical bar, upper diag, lower diag
+        const K_bot = new THREE.Vector2(0, -H * 0.5);
+        const K_top = new THREE.Vector2(0, H * 0.5);
+        const K_mid = new THREE.Vector2(0, 0);
+        const K_ur = new THREE.Vector2(WK * 0.6, H * 0.5);
+        const K_lr = new THREE.Vector2(WK * 0.6, -H * 0.5);
+
+        const sPick = rnd(i, 10 + offset);
+        let from = K_bot, to = K_top;
+        if (sPick < 1 / 3) {
+          // vertical bar
+          from = K_bot; to = K_top;
+        } else if (sPick < 2 / 3) {
+          // upper diagonal
+          from = K_mid; to = K_ur;
+        } else {
+          // lower diagonal
+          from = K_mid; to = K_lr;
+        }
+        px = kx + from.x + (to.x - from.x) * tStroke + jx;
+        py = from.y + (to.y - from.y) * tStroke + jy;
+      }
+      ak[i * 3 + 0] = px;
+      ak[i * 3 + 1] = py;
+      ak[i * 3 + 2] = pz;
 
       // Sphere (even-ish distribution)
       const theta = 2 * Math.PI * u;
@@ -123,7 +195,8 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
       swirl[i * 3 + 2] = (w - 0.5) * 1.5;
     }
 
-    shapesRef.current.sets = [sphere, torus, helix, swirl];
+    // Start the cycle with the "AK" shape first
+    shapesRef.current.sets = [ak, sphere, torus, helix, swirl];
     shapesRef.current.idxA = 0;
     shapesRef.current.idxB = 1;
   };
@@ -254,8 +327,20 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     // Double click to regenerate and restart cycle
     const canvasEl: HTMLCanvasElement | null = (gl as any)?.domElement ?? null;
     const onDblClick = () => {
+      // Regenerate point distribution and shapes
       offsetRef.current += 1;
       buildShapes(offsetRef.current);
+
+      // Randomly choose a new target shape and restart morph
+      const setsLen = shapesRef.current.sets.length;
+      if (setsLen > 1) {
+        const current = shapesRef.current.idxA; // treat current displayed as A
+        let next = Math.floor(Math.random() * setsLen);
+        // ensure different from current
+        if (next === current) next = (next + 1) % setsLen;
+        shapesRef.current.idxA = current;
+        shapesRef.current.idxB = next;
+      }
       morphStartRef.current = lastTimeRef.current;
     };
     if (canvasEl) canvasEl.addEventListener('dblclick', onDblClick);
