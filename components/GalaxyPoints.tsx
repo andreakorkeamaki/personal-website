@@ -250,13 +250,13 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
       // Subtle mouse repulsion/attraction in view space
       const toMouseX = rx - mouse3.x;
       const toMouseY = ry - mouse3.y;
-      const dist2 = toMouseX * toMouseX + toMouseY * toMouseY + 0.1;
-      const falloff = 1.0 / (1.0 + dist2 * 1);
-      const influence = Math.min(0.5, falloff);
+      const dist2 = toMouseX * toMouseX + toMouseY * toMouseY + 0.05;
+      const falloff = 1.0 / (1.0 + dist2 * 0.6);
+      const influence = Math.min(0.9, falloff * 1.8);
 
       // Desired target after effects
-      const tx2 = rx + dx + toMouseX * influence * 0.04;
-      const ty2 = ry + dy + toMouseY * influence * 0.04;
+      const tx2 = rx + dx + toMouseX * influence * 0.12;
+      const ty2 = ry + dy + toMouseY * influence * 0.12;
       const tz2 = tz + dz;
 
       // Smoothly approach target from current position
@@ -327,18 +327,12 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     // Double click to regenerate and restart cycle
     const canvasEl: HTMLCanvasElement | null = (gl as any)?.domElement ?? null;
     const onDblClick = () => {
-      // Regenerate point distribution and shapes
-      offsetRef.current += 1;
-      buildShapes(offsetRef.current);
-
-      // Randomly choose a new target shape and restart morph
+      // Randomly choose a new target shape (no regeneration)
       const setsLen = shapesRef.current.sets.length;
       if (setsLen > 1) {
-        const current = shapesRef.current.idxA; // treat current displayed as A
-        let next = Math.floor(Math.random() * setsLen);
-        // ensure different from current
-        if (next === current) next = (next + 1) % setsLen;
-        shapesRef.current.idxA = current;
+        const current = shapesRef.current.idxA; // current base shape
+        let next = Math.floor(Math.random() * (setsLen - 1));
+        if (next >= current) next += 1; // skip current
         shapesRef.current.idxB = next;
       }
       morphStartRef.current = lastTimeRef.current;
