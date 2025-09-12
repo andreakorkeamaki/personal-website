@@ -16,7 +16,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   const [proximities, setProximities] = useState<number[]>([]);
   const velocityRef = useRef(0); // px/s (approx)
   const lastRef = useRef({ x: 0, t: 0 });
-  const [sidePad, setSidePad] = useState(24); // dynamic spacer to allow first/last to center
+  const [sidePad, setSidePad] = useState(24); // dynamic padding so first/last center
 
   useEffect(() => setIndex(0), [catIndex]);
   // re-center when index reset due to category change
@@ -33,7 +33,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     const computePad = () => {
       const itemEl = inner.querySelector('[data-item-index="0"]') as HTMLElement | null;
       const cardW = itemEl?.offsetWidth || 180;
-      const pad = Math.max(16, Math.round(scroller.clientWidth / 2 - cardW / 2));
+      const pad = Math.max(12, Math.round(scroller.clientWidth / 2 - cardW / 2));
       setSidePad(pad);
     };
     computePad();
@@ -122,6 +122,14 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     return () => window.removeEventListener('resize', onR);
   }, [index]);
 
+  // Re-center when dynamic side padding changes (e.g., on first layout or rotation)
+  useEffect(() => {
+    const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
+    const el = inner.querySelector(`[data-item-index="${index}"]`) as HTMLElement | null; if (!el) return;
+    const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
+    scroller.scrollTo({ left: target, behavior: 'smooth' });
+  }, [sidePad]);
+
   const active = currentCat.projects[index];
   // Notify selection changes
   useEffect(() => {
@@ -165,9 +173,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
           {/* Center band indicator (fixed over the rail) */}
           <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-24 bottom-24 rounded-xl bg-white/5 ring-1 ring-white/10" style={{ width: '60%', maxWidth: 320, minWidth: 160, backdropFilter: 'blur(2px)' }} />
           <div ref={railScrollRef} className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scrollbar-none touch-pan-x snap-x snap-mandatory" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' as any }}>
-            <div ref={railInnerRef} className="flex items-end gap-4 px-6 pb-10" style={{ scrollPaddingLeft: sidePad, scrollPaddingRight: sidePad, perspective: 1000 }}>
-              {/* leading spacer */}
-              <div style={{ width: sidePad }} aria-hidden />
+            <div ref={railInnerRef} className="flex items-end gap-4 pb-10" style={{ paddingLeft: sidePad, paddingRight: sidePad, perspective: 1000 }}>
               {!hasProjects && (
                 <div className="mx-auto my-10 text-center text-white/80">
                   <div className="mx-auto h-36 w-64 rounded-xl border border-white/15 bg-black/20 backdrop-blur-sm flex items-center justify-center">Nessun progetto</div>
@@ -206,8 +212,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                   </div>
                 );
               })}
-              {/* trailing spacer */}
-              <div style={{ width: sidePad }} aria-hidden />
+              
             </div>
           </div>
         </div>
