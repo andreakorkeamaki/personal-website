@@ -33,7 +33,9 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     const computePad = () => {
       const itemEl = inner.querySelector('[data-item-index="0"]') as HTMLElement | null;
       const cardW = itemEl?.offsetWidth || 180;
-      const pad = Math.max(12, Math.round(scroller.clientWidth / 2 - cardW / 2));
+      const gap = 16; // gap-4
+      const fudge = 10; // extra to ensure last fully centers on iOS
+      const pad = Math.max(12, Math.round(scroller.clientWidth / 2 - cardW / 2 + gap / 2 + fudge));
       setSidePad(pad);
     };
     computePad();
