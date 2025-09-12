@@ -75,9 +75,9 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         const best = compute();
-        // Debounced snap when user stops scrolling
+        // Debounced snap when user stops scrolling (more friction)
         clearTimeout(endTimer);
-        endTimer = setTimeout(() => { if (!userDragging) snapToIndex(best); }, 110);
+        endTimer = setTimeout(() => { if (!userDragging) snapToIndex(best); }, 60);
       });
     };
 
@@ -86,11 +86,10 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
       userDragging = false;
       const v = velocityRef.current;
       const base = compute();
-      // Speed-based overshoot (allow skipping)
+      // High friction: overshoot rarely kicks in
       const absV = Math.abs(v);
       const dir = v > 0 ? 1 : -1;
-      let extra = 0;
-      if (absV > 1600) extra = 2; else if (absV > 900) extra = 1; // tuneable
+      const extra = absV > 2000 ? 1 : 0;
       const target = Math.max(0, Math.min(safeLen - 1, base + dir * extra));
       snapToIndex(target);
     };
@@ -162,11 +161,11 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
         </div>
 
         {/* Rail */}
-        <div className="px-3 pt-6 flex-1 relative">
+        <div className="px-3 pt-8 flex-1 relative">
           {/* Center band indicator (fixed over the rail) */}
           <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-24 bottom-24 rounded-xl bg-white/5 ring-1 ring-white/10" style={{ width: '60%', maxWidth: 320, minWidth: 160, backdropFilter: 'blur(2px)' }} />
-          <div ref={railScrollRef} className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scrollbar-none touch-pan-x" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' as any }}>
-            <div ref={railInnerRef} className="flex items-end gap-4 px-6 snap-x snap-mandatory pb-10" style={{ scrollPaddingLeft: sidePad, scrollPaddingRight: sidePad, perspective: 1000 }}>
+          <div ref={railScrollRef} className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scrollbar-none touch-pan-x snap-x snap-mandatory" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' as any }}>
+            <div ref={railInnerRef} className="flex items-end gap-4 px-6 pb-10" style={{ scrollPaddingLeft: sidePad, scrollPaddingRight: sidePad, perspective: 1000 }}>
               {/* leading spacer */}
               <div style={{ width: sidePad }} aria-hidden />
               {!hasProjects && (
@@ -177,10 +176,12 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
               )}
               {hasProjects && currentCat.projects.map((p,i)=>{
                 const pxy = proximities[i] ?? (i===index?1:0);
-                const scale = 0.88 + pxy*0.17; const opacity = 0.7 + pxy*0.3;
+                const scale = 0.85 + pxy*0.25; // grow more when centered
+                const opacity = 0.65 + pxy*0.35;
                 // rotation for wheel effect: left positive, right negative
                 const dir = i < index ? 1 : i > index ? -1 : 0;
                 const angle = dir * (12 * (1 - pxy));
+                const ty = 8 + (1 - pxy) * 0 + pxy * 10; // drop a bit when centered
                 return (
                   <div
                     key={p.id}
@@ -194,7 +195,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                     }}
                     className="relative shrink-0 snap-center rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden"
                     data-item-index={i}
-                    style={{ width: 180, height: 210, transform: `perspective(1000px) rotateY(${angle}deg) scale(${scale})`, opacity, transition: 'transform 160ms ease-out, opacity 160ms ease-out', scrollSnapAlign: 'center', scrollSnapStop: 'always' as any }}
+                    style={{ width: 180, height: 210, transform: `perspective(1000px) translateY(${ty}px) rotateY(${angle}deg) scale(${scale})`, opacity, transition: 'transform 160ms ease-out, opacity 160ms ease-out', scrollSnapAlign: 'center', scrollSnapStop: 'always' as any, boxShadow: pxy>0.95 ? '0 20px 50px rgba(0,0,0,0.35)' : '0 8px 20px rgba(0,0,0,0.25)' }}
                   >
                     <img src={p.tile || p.cover} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
