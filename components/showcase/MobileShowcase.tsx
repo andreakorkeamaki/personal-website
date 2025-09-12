@@ -16,6 +16,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   const [proximities, setProximities] = useState<number[]>([]);
   const velocityRef = useRef(0); // px/s (approx)
   const lastRef = useRef({ x: 0, t: 0 });
+  const [sidePad, setSidePad] = useState(24); // dynamic spacer to allow first/last to center
 
   useEffect(() => setIndex(0), [catIndex]);
   // re-center when index reset due to category change
@@ -26,6 +27,20 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     scroller.scrollTo({ left: target, behavior: 'smooth' });
   }, [catIndex]);
 
+  // Helper to compute dynamic side padding so first/last can center perfectly
+  useEffect(() => {
+    const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
+    const computePad = () => {
+      const itemEl = inner.querySelector('[data-item-index="0"]') as HTMLElement | null;
+      const cardW = itemEl?.offsetWidth || 180;
+      const pad = Math.max(16, Math.round(scroller.clientWidth / 2 - cardW / 2));
+      setSidePad(pad);
+    };
+    computePad();
+    window.addEventListener('resize', computePad);
+    return () => window.removeEventListener('resize', computePad);
+  }, [catIndex]);
+
   // Keep center card selected and snap to it when scrolling stops
   useEffect(() => {
     const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
@@ -33,19 +48,19 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
 
     const compute = () => {
       const center = scroller.scrollLeft + scroller.clientWidth / 2;
-      let best = 0, bestDist = Infinity; const children = Array.from(inner.children) as HTMLElement[]; const prox:number[] = new Array(children.length).fill(0);
-      for (let i = 0; i < children.length; i++) {
-        const el = children[i]; const elCenter = el.offsetLeft + el.offsetWidth / 2; const d = Math.abs(elCenter - center);
+      let bestIdx = 0, bestDist = Infinity; const itemEls = Array.from(inner.querySelectorAll('[data-item-index]')) as HTMLElement[];
+      const prox:number[] = new Array(itemEls.length).fill(0);
+      for (let i = 0; i < itemEls.length; i++) {
+        const el = itemEls[i]; const elCenter = el.offsetLeft + el.offsetWidth / 2; const d = Math.abs(elCenter - center);
         const dn = Math.min(1, d / (scroller.clientWidth * 0.5)); prox[i] = 1 - dn;
-        if (d < bestDist) { bestDist = d; best = i; }
+        if (d < bestDist) { bestDist = d; bestIdx = i; }
       }
-      setIndex(best % safeLen); setProximities(prox);
-      return best;
+      setIndex(bestIdx % safeLen); setProximities(prox);
+      return bestIdx;
     };
 
     const snapToIndex = (i: number) => {
-      const children = inner.children as any;
-      const el: HTMLElement | undefined = children?.[i]; if (!el) return;
+      const el = inner.querySelector(`[data-item-index="${i}"]`) as HTMLElement | null; if (!el) return;
       const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
       scroller.scrollTo({ left: target, behavior: 'smooth' });
     };
@@ -100,7 +115,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   useEffect(() => {
     const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
     const onR = () => {
-      const children = inner.children as any; const el: HTMLElement | undefined = children?.[index]; if (!el) return;
+      const el = inner.querySelector(`[data-item-index="${index}"]`) as HTMLElement | null; if (!el) return;
       const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
       scroller.scrollTo({ left: target, behavior: 'smooth' });
     };
@@ -147,11 +162,13 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
         </div>
 
         {/* Rail */}
-        <div className="px-3 pt-2 flex-1 relative">
+        <div className="px-3 pt-6 flex-1 relative">
           {/* Center band indicator (fixed over the rail) */}
-          <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-16 bottom-16 rounded-xl bg-white/5 ring-1 ring-white/10" style={{ width: '58%', maxWidth: 300, minWidth: 160, backdropFilter: 'blur(2px)' }} />
+          <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-24 bottom-24 rounded-xl bg-white/5 ring-1 ring-white/10" style={{ width: '60%', maxWidth: 320, minWidth: 160, backdropFilter: 'blur(2px)' }} />
           <div ref={railScrollRef} className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scrollbar-none touch-pan-x" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' as any }}>
-            <div ref={railInnerRef} className="flex items-end gap-4 px-6 snap-x snap-mandatory pb-6" style={{ scrollPaddingLeft: 24, scrollPaddingRight: 24, perspective: 1000 }}>
+            <div ref={railInnerRef} className="flex items-end gap-4 px-6 snap-x snap-mandatory pb-10" style={{ scrollPaddingLeft: sidePad, scrollPaddingRight: sidePad, perspective: 1000 }}>
+              {/* leading spacer */}
+              <div style={{ width: sidePad }} aria-hidden />
               {!hasProjects && (
                 <div className="mx-auto my-10 text-center text-white/80">
                   <div className="mx-auto h-36 w-64 rounded-xl border border-white/15 bg-black/20 backdrop-blur-sm flex items-center justify-center">Nessun progetto</div>
@@ -170,12 +187,13 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                     onClick={() => {
                       // tap to center
                       const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
-                      const children = inner.children as any; const el: HTMLElement | undefined = children?.[i]; if (!el) return;
+                      const el = inner.querySelector(`[data-item-index="${i}"]`) as HTMLElement | null; if (!el) return;
                       const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
                       scroller.scrollTo({ left: target, behavior: 'smooth' });
                       setIndex(i);
                     }}
                     className="relative shrink-0 snap-center rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden"
+                    data-item-index={i}
                     style={{ width: 180, height: 210, transform: `perspective(1000px) rotateY(${angle}deg) scale(${scale})`, opacity, transition: 'transform 160ms ease-out, opacity 160ms ease-out', scrollSnapAlign: 'center', scrollSnapStop: 'always' as any }}
                   >
                     <img src={p.tile || p.cover} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
@@ -187,6 +205,8 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                   </div>
                 );
               })}
+              {/* trailing spacer */}
+              <div style={{ width: sidePad }} aria-hidden />
             </div>
           </div>
         </div>
