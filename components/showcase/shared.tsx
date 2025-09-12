@@ -26,6 +26,7 @@ export type Category = {
 export type ShowcaseProps = {
   initialIndex?: number;
   onOpen?: (p: Project) => void;
+  onSelect?: (p: Project, index: number) => void;
   className?: string;
 };
 
@@ -124,4 +125,3 @@ export function InfoCard({ title, thumb, subtitle }: { title: string; thumb?: st
     </div>
   );
 }
-
