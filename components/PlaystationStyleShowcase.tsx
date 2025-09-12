@@ -313,6 +313,8 @@ export default function PlaystationStyleShowcase({
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [sectionActive, setSectionActive] = useState(false);
+  const railScrollRef = useRef<HTMLDivElement | null>(null);
+  const railInnerRef = useRef<HTMLDivElement | null>(null);
   // Track viewport width to adjust card sizes responsively
   const [vw, setVw] = useState<number>(typeof window !== "undefined" ? window.innerWidth : 1280);
   useEffect(() => {
@@ -320,6 +322,7 @@ export default function PlaystationStyleShowcase({
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+  const isMobile = vw < 768;
   const [catIndex, setCatIndex] = useState(0);
   const currentCat = CATEGORIES[catIndex];
 
@@ -401,6 +404,40 @@ export default function PlaystationStyleShowcase({
     return { w: 200, h: 220, wA: 260, hA: 300 };
   }, [vw]);
 
+  // Mobile: keep the center card selected while scrolling
+  useEffect(() => {
+    if (!isMobile) return;
+    const scroller = railScrollRef.current;
+    const inner = railInnerRef.current;
+    if (!scroller || !inner) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const center = scroller.scrollLeft + scroller.clientWidth / 2;
+        let best = 0;
+        let bestDist = Infinity;
+        const children = Array.from(inner.children) as HTMLElement[];
+        for (let i = 0; i < children.length; i++) {
+          const el = children[i];
+          const elCenter = el.offsetLeft + el.offsetWidth / 2;
+          const d = Math.abs(elCenter - center);
+          if (d < bestDist) {
+            bestDist = d;
+            best = i;
+          }
+        }
+        setIndex(best % safeLen);
+      });
+    };
+    scroller.addEventListener('scroll', onScroll, { passive: true } as any);
+    onScroll();
+    return () => {
+      scroller.removeEventListener('scroll', onScroll as any);
+      cancelAnimationFrame(raf);
+    };
+  }, [isMobile, safeLen, currentCat.id]);
+
   return (
     <div
       ref={rootRef}
@@ -465,8 +502,8 @@ export default function PlaystationStyleShowcase({
 
         {/* Main grid: left menu + project rail + single info square bottom-left */}
         <div className="px-3 sm:px-5 md:px-8 pt-2 flex-1 grid grid-cols-12 gap-5">
-          {/* LEFT MENU (persists at bottom-left area) */}
-          <div className="col-span-12 md:col-span-3 lg:col-span-2 flex flex-col justify-end">
+          {/* LEFT MENU (hidden on mobile) */}
+          <div className="hidden md:flex col-span-12 md:col-span-3 lg:col-span-2 flex-col justify-end">
             <div className="rounded-xl bg-black/25 border border-white/10 overflow-hidden">
               <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
                 <Play className="h-4 w-4" />
@@ -490,17 +527,17 @@ export default function PlaystationStyleShowcase({
           {/* PROJECT RAIL */}
           <div className="col-span-12 md:col-span-9 lg:col-span-10 flex flex-col">
             <div className="flex-1 flex items-center">
-              <div className="w-full overflow-x-auto overflow-y-visible [-webkit-overflow-scrolling:touch] scrollbar-none">
-                <div className="flex items-end gap-4 px-2 md:px-0 snap-x snap-mandatory pb-4 md:pb-6">
+              <div ref={railScrollRef} className="w-full overflow-x-auto overflow-y-visible [-webkit-overflow-scrolling:touch] scrollbar-none">
+                <div ref={railInnerRef} className="flex items-end gap-4 px-2 md:px-0 snap-x snap-mandatory pb-4 md:pb-6">
                   {currentCat.projects.map((p, i) => {
-                    const activeCard = i === displayIndex;
+                    const activeCard = isMobile ? i === index : i === displayIndex;
                     return (
                       <motion.div
                         key={p.id}
                         onMouseEnter={() => setHoverIndex(i)}
                         onMouseLeave={() => setHoverIndex(null)}
-                        className={`relative shrink-0 snap-start rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden hover:border-white/30`}
-                        style={{ width: activeCard ? cardSizes.wA : cardSizes.w, height: activeCard ? cardSizes.hA : cardSizes.h }}
+                        className={`relative shrink-0 snap-center rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden hover:border-white/30 ${activeCard && !isMobile ? 'ring-2 ring-white/50' : ''}`}
+                        style={{ width: isMobile ? cardSizes.w : (activeCard ? cardSizes.wA : cardSizes.w), height: isMobile ? cardSizes.h : (activeCard ? cardSizes.hA : cardSizes.h) }}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.04 }}
@@ -518,14 +555,7 @@ export default function PlaystationStyleShowcase({
               </div>
             </div>
 
-            {/* Info: hidden on desktop, shown under rail on small screens */}
-            <div className="mt-4 grid grid-cols-12 md:hidden">
-              <div className="col-span-12">
-                {active && (
-                  <InfoCard title={(active.info?.[0]?.title) || "Dettagli progetto"} thumb={active.info?.[0]?.thumb} subtitle={active.title} />
-                )}
-              </div>
-            </div>
+            {/* Mobile info panel hidden per request */}
           </div>
         </div>
       </div>
