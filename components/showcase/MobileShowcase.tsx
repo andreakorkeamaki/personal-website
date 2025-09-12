@@ -16,20 +16,64 @@ export default function MobileShowcase({ initialIndex = 0, className }: Showcase
   const [proximities, setProximities] = useState<number[]>([]);
 
   useEffect(() => setIndex(0), [catIndex]);
-
-  // Keep center card selected and compute proximity
+  // re-center when index reset due to category change
   useEffect(() => {
     const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
-    let raf = 0;
-    const onScroll = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => {
-      const center = scroller.scrollLeft + scroller.clientWidth/2;
-      let best=0, bestDist=Infinity; const children = Array.from(inner.children) as HTMLElement[]; const prox:number[] = new Array(children.length).fill(0);
-      for (let i=0;i<children.length;i++){ const el=children[i]; const elCenter = el.offsetLeft + el.offsetWidth/2; const d=Math.abs(elCenter-center); const dn=Math.min(1, d/(scroller.clientWidth*0.5)); prox[i]=1-dn; if(d<bestDist){bestDist=d; best=i;} }
+    const children = inner.children as any; const el: HTMLElement | undefined = children?.[0]; if (!el) return;
+    const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
+    scroller.scrollTo({ left: target, behavior: 'smooth' });
+  }, [catIndex]);
+
+  // Keep center card selected and snap to it when scrolling stops
+  useEffect(() => {
+    const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
+    let raf = 0; let endTimer: any = null; let userDragging = false;
+
+    const compute = () => {
+      const center = scroller.scrollLeft + scroller.clientWidth / 2;
+      let best = 0, bestDist = Infinity; const children = Array.from(inner.children) as HTMLElement[]; const prox:number[] = new Array(children.length).fill(0);
+      for (let i = 0; i < children.length; i++) {
+        const el = children[i]; const elCenter = el.offsetLeft + el.offsetWidth / 2; const d = Math.abs(elCenter - center);
+        const dn = Math.min(1, d / (scroller.clientWidth * 0.5)); prox[i] = 1 - dn;
+        if (d < bestDist) { bestDist = d; best = i; }
+      }
       setIndex(best % safeLen); setProximities(prox);
-    }); };
+      return best;
+    };
+
+    const snapToIndex = (i: number) => {
+      const children = inner.children as any;
+      const el: HTMLElement | undefined = children?.[i]; if (!el) return;
+      const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
+      scroller.scrollTo({ left: target, behavior: 'smooth' });
+    };
+
+    const onScroll = () => {
+      cancelAnimationFrame(raf); raf = requestAnimationFrame(() => {
+        const best = compute();
+        // Debounced snap when user stops scrolling
+        clearTimeout(endTimer);
+        endTimer = setTimeout(() => { if (!userDragging) snapToIndex(best); }, 90);
+      });
+    };
+
+    const onDown = () => { userDragging = true; clearTimeout(endTimer); };
+    const onUp = () => { userDragging = false; const best = compute(); snapToIndex(best); };
+
     scroller.addEventListener('scroll', onScroll, { passive: true } as any);
-    onScroll();
-    return ()=>{ scroller.removeEventListener('scroll', onScroll as any); cancelAnimationFrame(raf); };
+    scroller.addEventListener('pointerdown', onDown, { passive: true } as any);
+    window.addEventListener('pointerup', onUp, { passive: true } as any);
+
+    // Center initial item
+    const initial = Math.min(Math.max(0, index), safeLen - 1);
+    setTimeout(() => snapToIndex(initial), 0);
+
+    return () => {
+      scroller.removeEventListener('scroll', onScroll as any);
+      scroller.removeEventListener('pointerdown', onDown as any);
+      window.removeEventListener('pointerup', onUp as any);
+      cancelAnimationFrame(raf); clearTimeout(endTimer);
+    };
   }, [safeLen, currentCat.id]);
 
   const active = currentCat.projects[index];
@@ -66,13 +110,13 @@ export default function MobileShowcase({ initialIndex = 0, className }: Showcase
 
         {/* Rail */}
         <div className="px-3 pt-2 flex-1">
-          <div ref={railScrollRef} className="w-full overflow-x-auto [-webkit-overflow-scrolling:touch] scrollbar-none">
-            <div ref={railInnerRef} className="flex items-end gap-4 px-2 snap-x snap-mandatory pb-6">
+          <div ref={railScrollRef} className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scrollbar-none" style={{ scrollBehavior: 'smooth' }}>
+            <div ref={railInnerRef} className="flex items-end gap-4 px-6 snap-x snap-mandatory pb-6" style={{ scrollPaddingLeft: 24, scrollPaddingRight: 24 }}>
               {currentCat.projects.map((p,i)=>{
                 const pxy = proximities[i] ?? (i===index?1:0);
                 const scale = 0.88 + pxy*0.17; const opacity = 0.7 + pxy*0.3;
                 return (
-                  <div key={p.id} className="relative shrink-0 snap-center rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden" style={{ width: 180, height: 210, transform: `scale(${scale})`, opacity, transition: 'transform 160ms ease-out, opacity 160ms ease-out' }}>
+                  <div key={p.id} className="relative shrink-0 snap-center rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden" style={{ width: 180, height: 210, transform: `scale(${scale})`, opacity, transition: 'transform 160ms ease-out, opacity 160ms ease-out', scrollSnapAlign: 'center', scrollSnapStop: 'always' as any }}>
                     <img src={p.tile || p.cover} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">
@@ -89,4 +133,3 @@ export default function MobileShowcase({ initialIndex = 0, className }: Showcase
     </div>
   );
 }
-
