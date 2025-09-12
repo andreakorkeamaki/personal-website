@@ -34,14 +34,14 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
       const itemEl = inner.querySelector('[data-item-index="0"]') as HTMLElement | null;
       const cardW = itemEl?.offsetWidth || 180;
       const gap = 16; // gap-4
-      const fudge = 10; // extra to ensure last fully centers on iOS
-      const pad = Math.max(12, Math.round(scroller.clientWidth / 2 - cardW / 2 + gap / 2 + fudge));
+      const fudge = 40; // increased extra padding to ensure last fully centers
+      const pad = Math.max(24, Math.round(scroller.clientWidth / 2 - cardW / 2 + gap / 2 + fudge));
       setSidePad(pad);
     };
     computePad();
     window.addEventListener('resize', computePad);
     return () => window.removeEventListener('resize', computePad);
-  }, [catIndex]);
+  }, [catIndex, safeLen]); // added safeLen dependency
 
   // Keep center card selected and snap to it when scrolling stops
   useEffect(() => {
@@ -179,7 +179,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
         <div className="px-3 pt-8 flex-1 relative">
           {/* Center band indicator (fixed over the rail) */}
           <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-24 bottom-24 rounded-xl bg-white/5 ring-1 ring-white/10" style={{ width: '60%', maxWidth: 320, minWidth: 160, backdropFilter: 'blur(2px)' }} />
-          <div ref={railScrollRef} className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scrollbar-none touch-pan-x snap-x snap-mandatory" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' as any }}>
+          <div ref={railScrollRef} className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scrollbar-none touch-pan-x" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' as any }}>
             <div ref={railInnerRef} className="flex items-end gap-4 pb-10" style={{ paddingLeft: sidePad, paddingRight: sidePad, perspective: 1000 }}>
               {!hasProjects && (
                 <div className="mx-auto my-10 text-center text-white/80">
