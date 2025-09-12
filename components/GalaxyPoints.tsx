@@ -16,10 +16,26 @@ const C3 = hex('#468A9A'); // teal
 
 export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
   const pointsRef = useRef<THREE.Points | null>(null);
-  const { size } = useThree();
+  const { size, gl } = useThree();
 
   const isMobile = size.width < 768;
   const finalCount = Math.floor(isMobile ? count * 0.45 : count);
+
+  // Color palettes for each shape using existing colors
+  const colorPalettes = useMemo(() => {
+    return [
+      // AK letters - bright and vibrant
+      [C1.clone().multiplyScalar(1.2), C2.clone().multiplyScalar(1.1), C3.clone().multiplyScalar(1.0)],
+      // Sphere - cool blues and teals
+      [C1.clone(), C3.clone().multiplyScalar(1.1), C1.clone().multiplyScalar(0.8)],
+      // Torus - warm purples and blues
+      [C2.clone().multiplyScalar(1.1), C1.clone().multiplyScalar(0.9), C2.clone()],
+      // Helix - mixed palette
+      [C3.clone().multiplyScalar(1.1), C2.clone().multiplyScalar(0.9), C1.clone().multiplyScalar(1.1)],
+      // Swirl - deep and rich
+      [C2.clone(), C3.clone(), C1.clone().multiplyScalar(0.9)]
+    ];
+  }, []);
 
   const { positions, colors, scales, seeds } = useMemo(() => {
     const positions = new Float32Array(finalCount * 3);
@@ -40,13 +56,14 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
       positions[i * 3 + 1] = tmp.y;
       positions[i * 3 + 2] = tmp.z;
 
-      // Color as a soft gradient mix between three palette colors
+      // Initial color using first palette (AK letters)
+      const palette = colorPalettes[0];
       const t1 = Math.random();
       const t2 = Math.random() * (1 - t1);
       const t3 = 1 - t1 - t2;
-      const col = C1.clone().multiplyScalar(t1);
-      col.add(C2.clone().multiplyScalar(t2));
-      col.add(C3.clone().multiplyScalar(t3));
+      const col = palette[0].clone().multiplyScalar(t1);
+      col.add(palette[1].clone().multiplyScalar(t2));
+      col.add(palette[2].clone().multiplyScalar(t3));
       colors[i * 3 + 0] = col.r;
       colors[i * 3 + 1] = col.g;
       colors[i * 3 + 2] = col.b;
@@ -62,8 +79,17 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
   const basePositions = useRef<Float32Array>(positions);
   const offsetRef = useRef<number>(0);
   const morphStartRef = useRef<number>(0);
-  const morphDurationRef = useRef<number>(8); // seconds per morph
+  const morphDurationRef = useRef<number>(9); // seconds per morph
   const lastTimeRef = useRef<number>(0);
+
+  // Background colors for each shape
+  const backgroundColors = useMemo(() => [
+    '#0F0E0E', // AK - dark
+    '#1A1B2E', // Sphere - dark blue
+    '#2D1B3D', // Torus - dark purple
+    '#1E2A3A', // Helix - dark teal
+    '#0A0A0A'  // Swirl - very dark
+  ], []);
 
   const shapesRef = useRef<{ sets: Float32Array[]; idxA: number; idxB: number }>(
     { sets: [], idxA: 0, idxB: 1 }
@@ -209,6 +235,7 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
 
     const geo = pts.geometry as THREE.BufferGeometry;
     const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+    const col = geo.getAttribute('color') as THREE.BufferAttribute;
     const sca = geo.getAttribute('aScale') as THREE.BufferAttribute;
     const sed = geo.getAttribute('aSeed') as THREE.BufferAttribute;
 
@@ -227,6 +254,16 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     const dur = morphDurationRef.current;
     const s = Math.min(1, Math.max(0, (t - morphStartRef.current) / dur));
     const ease = s < 0.5 ? 4 * s * s * s : 1 - Math.pow(-2 * s + 2, 3) / 2; // easeInOutCubic
+
+    // Get current and target color palettes
+    const paletteA = colorPalettes[shapesRef.current.idxA];
+    const paletteB = colorPalettes[shapesRef.current.idxB];
+    
+    // Update background color
+    const bgColorA = backgroundColors[shapesRef.current.idxA];
+    const bgColorB = backgroundColors[shapesRef.current.idxB];
+    const currentBgColor = new THREE.Color(bgColorA).lerp(new THREE.Color(bgColorB), ease);
+    gl.setClearColor(currentBgColor);
 
     for (let i = 0; i < pos.count; i++) {
       const ix = i * 3;
@@ -270,6 +307,31 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
 
       pos.setXYZ(i, nx, ny, nz);
 
+      // Morph colors between palettes
+      const seedColor = sed.getX(i);
+      const t1 = (Math.sin(seedColor * 12.9898) * 0.5 + 0.5);
+      const t2 = (Math.sin(seedColor * 78.233) * 0.5 + 0.5) * (1 - t1);
+      const t3 = 1 - t1 - t2;
+      
+      // Blend colors from palette A
+      const colorA = paletteA[0].clone().multiplyScalar(t1)
+        .add(paletteA[1].clone().multiplyScalar(t2))
+        .add(paletteA[2].clone().multiplyScalar(t3));
+      
+      // Blend colors from palette B
+      const colorB = paletteB[0].clone().multiplyScalar(t1)
+        .add(paletteB[1].clone().multiplyScalar(t2))
+        .add(paletteB[2].clone().multiplyScalar(t3));
+      
+      // Interpolate between the two colors
+      const finalColor = colorA.lerp(colorB, ease);
+      
+      // Add subtle color animation
+      const colorPhase = Math.sin(t * 0.3 + phase * 2.1) * 0.1 + 1.0;
+      finalColor.multiplyScalar(colorPhase);
+      
+      col.setXYZ(i, finalColor.r, finalColor.g, finalColor.b);
+
       // Flicker scale a touch
       const baseScale = sca.getX(i);
       const flicker = 0.85 + 0.15 * Math.sin(t * 1.2 + phase * 3.3);
@@ -277,6 +339,7 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     }
 
     pos.needsUpdate = true;
+    col.needsUpdate = true;
     sca.needsUpdate = true;
 
     // Advance morph cycle
@@ -316,7 +379,7 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     return obj;
   }, [geometry, material]);
 
-  const { scene, gl } = useThree();
+  const { scene } = useThree();
   useEffect(() => {
     pointsRef.current = ptsObject;
     scene.add(ptsObject);
