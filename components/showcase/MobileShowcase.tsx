@@ -59,10 +59,12 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
       return bestIdx;
     };
 
-    const snapToIndex = (i: number) => {
+    const snapToIndex = (i: number, behavior: ScrollBehavior = 'auto') => {
       const el = inner.querySelector(`[data-item-index="${i}"]`) as HTMLElement | null; if (!el) return;
-      const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
-      scroller.scrollTo({ left: target, behavior: 'smooth' });
+      const raw = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
+      const max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      const target = Math.max(0, Math.min(raw, max));
+      scroller.scrollTo({ left: target, behavior });
     };
 
     const onScroll = () => {
@@ -77,7 +79,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
         const best = compute();
         // Debounced snap when user stops scrolling (more friction)
         clearTimeout(endTimer);
-        endTimer = setTimeout(() => { if (!userDragging) snapToIndex(best); }, 60);
+        endTimer = setTimeout(() => { if (!userDragging) snapToIndex(best, 'smooth'); }, 60);
       });
     };
 
@@ -91,7 +93,8 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
       const dir = v > 0 ? 1 : -1;
       const extra = absV > 2000 ? 1 : 0;
       const target = Math.max(0, Math.min(safeLen - 1, base + dir * extra));
-      snapToIndex(target);
+      // cancel inertia immediately and lock to center
+      snapToIndex(target, 'auto');
     };
 
     scroller.addEventListener('scroll', onScroll, { passive: true } as any);
@@ -100,7 +103,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
 
     // Center initial item and record initial pos
     const initial = Math.min(Math.max(0, index), safeLen - 1);
-    setTimeout(() => { snapToIndex(initial); lastRef.current = { x: scroller.scrollLeft, t: performance.now() }; }, 0);
+    setTimeout(() => { snapToIndex(initial, 'auto'); lastRef.current = { x: scroller.scrollLeft, t: performance.now() }; }, 0);
 
     return () => {
       scroller.removeEventListener('scroll', onScroll as any);
@@ -115,8 +118,10 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
     const onR = () => {
       const el = inner.querySelector(`[data-item-index="${index}"]`) as HTMLElement | null; if (!el) return;
-      const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
-      scroller.scrollTo({ left: target, behavior: 'smooth' });
+      const raw = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
+      const max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+      const target = Math.max(0, Math.min(raw, max));
+      scroller.scrollTo({ left: target, behavior: 'auto' });
     };
     window.addEventListener('resize', onR);
     return () => window.removeEventListener('resize', onR);
@@ -196,7 +201,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                       const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
                       const el = inner.querySelector(`[data-item-index="${i}"]`) as HTMLElement | null; if (!el) return;
                       const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
-                      scroller.scrollTo({ left: target, behavior: 'smooth' });
+                      scroller.scrollTo({ left: Math.max(0, Math.min(target, Math.max(0, scroller.scrollWidth - scroller.clientWidth))), behavior: 'auto' });
                       setIndex(i);
                     }}
                     className="relative shrink-0 snap-center rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden"
