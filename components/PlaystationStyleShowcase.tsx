@@ -315,6 +315,7 @@ export default function PlaystationStyleShowcase({
   const [sectionActive, setSectionActive] = useState(false);
   const railScrollRef = useRef<HTMLDivElement | null>(null);
   const railInnerRef = useRef<HTMLDivElement | null>(null);
+  const [proximities, setProximities] = useState<number[]>([]);
   // Track viewport width to adjust card sizes responsively
   const [vw, setVw] = useState<number>(typeof window !== "undefined" ? window.innerWidth : 1280);
   useEffect(() => {
@@ -418,16 +419,20 @@ export default function PlaystationStyleShowcase({
         let best = 0;
         let bestDist = Infinity;
         const children = Array.from(inner.children) as HTMLElement[];
+        const newProx: number[] = new Array(children.length).fill(0);
         for (let i = 0; i < children.length; i++) {
           const el = children[i];
           const elCenter = el.offsetLeft + el.offsetWidth / 2;
           const d = Math.abs(elCenter - center);
+          const dn = Math.min(1, d / (scroller.clientWidth * 0.5));
+          newProx[i] = 1 - dn; // 1 at center, 0 far away
           if (d < bestDist) {
             bestDist = d;
             best = i;
           }
         }
         setIndex(best % safeLen);
+        setProximities(newProx);
       });
     };
     scroller.addEventListener('scroll', onScroll, { passive: true } as any);
@@ -531,13 +536,16 @@ export default function PlaystationStyleShowcase({
                 <div ref={railInnerRef} className="flex items-end gap-4 px-2 md:px-0 snap-x snap-mandatory pb-4 md:pb-6">
                   {currentCat.projects.map((p, i) => {
                     const activeCard = isMobile ? i === index : i === displayIndex;
+                    const pxy = isMobile ? (proximities[i] ?? (i === index ? 1 : 0)) : (activeCard ? 1 : 0);
+                    const scale = isMobile ? (0.88 + pxy * 0.17) : 1;
+                    const opacity = isMobile ? (0.7 + pxy * 0.3) : 1;
                     return (
                       <motion.div
                         key={p.id}
-                        onMouseEnter={() => setHoverIndex(i)}
-                        onMouseLeave={() => setHoverIndex(null)}
+                        onMouseEnter={() => !isMobile && setHoverIndex(i)}
+                        onMouseLeave={() => !isMobile && setHoverIndex(null)}
                         className={`relative shrink-0 snap-center rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden hover:border-white/30 ${activeCard && !isMobile ? 'ring-2 ring-white/50' : ''}`}
-                        style={{ width: isMobile ? cardSizes.w : (activeCard ? cardSizes.wA : cardSizes.w), height: isMobile ? cardSizes.h : (activeCard ? cardSizes.hA : cardSizes.h) }}
+                        style={{ width: isMobile ? cardSizes.w : (activeCard ? cardSizes.wA : cardSizes.w), height: isMobile ? cardSizes.h : (activeCard ? cardSizes.hA : cardSizes.h), transform: `scale(${scale})`, opacity, transition: 'transform 160ms ease-out, opacity 160ms ease-out' }}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.04 }}
