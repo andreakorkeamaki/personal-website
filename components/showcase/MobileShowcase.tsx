@@ -166,9 +166,9 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
         />
       </div>
 
-      <div className="relative min-h-[60vh] flex flex-col text-white pb-10">
-        <div className="px-4 pt-3">
-          <div className="flex gap-2 overflow-x-auto pb-2 justify-center">
+      <div className="relative min-h-screen flex flex-col text-white pb-16 pt-8">
+        <div className="px-4">
+          <div className="flex gap-2 overflow-x-auto pb-3 justify-center">
             {CATEGORIES.map((category, i) => {
               const Icon = category.icon || Boxes;
               const isActiveCat = i === catIndex;
@@ -259,7 +259,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                     type="button"
                     onClick={goPrev}
                     aria-label="Progetto precedente"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full border border-white/30 bg-black/35 p-2 backdrop-blur-sm"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[150%] rounded-full border border-white/30 bg-black/35 p-2 backdrop-blur-sm"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
@@ -267,7 +267,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                     type="button"
                     onClick={goNext}
                     aria-label="Progetto successivo"
-                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rounded-full border border-white/30 bg-black/35 p-2 backdrop-blur-sm"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[150%] rounded-full border border-white/30 bg-black/35 p-2 backdrop-blur-sm"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
