@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORIES, ShowcaseProps } from "./shared";
-import { Boxes, ChevronLeft, ChevronRight } from "lucide-react";
+import { Boxes, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function MobileShowcase({ initialIndex = 0, className, onSelect }: ShowcaseProps) {
   const flattened = useMemo(() => {
@@ -19,10 +19,12 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   const hasProjects = safeLen > 0;
   const boundedInitialIndex = hasProjects ? Math.min(Math.max(0, initialIndex), safeLen - 1) : 0;
   const [index, setIndex] = useState(boundedInitialIndex);
+  const [categoryOpen, setCategoryOpen] = useState(false);
 
   useEffect(() => {
     if (!hasProjects) {
       setIndex(0);
+      setCategoryOpen(false);
       return;
     }
     setIndex((prev) => {
@@ -61,7 +63,10 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
 
   const jumpToCategory = (catIdx: number) => {
     const target = categoryOffsets[catIdx];
-    if (target >= 0) setIndex(target);
+    if (target >= 0) {
+      setIndex(target);
+      setCategoryOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -173,6 +178,72 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
       </div>
 
       <div className="relative min-h-screen flex flex-col text-white pb-16 pt-8">
+        {hasProjects && (
+          <div className="px-4 relative z-20">
+            <button
+              type="button"
+              onClick={() => hasProjects && setCategoryOpen((open) => !open)}
+              className="mx-auto flex w-full max-w-[320px] items-center justify-between gap-3 rounded-2xl border border-white/25 bg-white/10 px-4 py-3 text-left backdrop-blur-md shadow-lg"
+            >
+              <div className="flex-1">
+                <p className="text-[11px] uppercase tracking-wide text-white/60">Categoria</p>
+                <p className="text-lg font-semibold leading-tight line-clamp-1">{activeCategory?.label}</p>
+                {activeProject && (
+                  <p className="mt-1 text-xs text-white/70 line-clamp-1">{activeProject.title}</p>
+                )}
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${categoryOpen ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {categoryOpen && hasProjects && (
+            <motion.div
+              key="category-overlay"
+              className="absolute inset-0 z-40 flex flex-col px-4 pt-24 pb-28 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCategoryOpen(false)}
+            >
+              <motion.div
+                initial={{ y: 32, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 32, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="mx-auto w-full max-w-[360px] rounded-3xl border border-white/20 bg-black/55 backdrop-blur-lg shadow-2xl overflow-hidden"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {CATEGORIES.map((category, i) => {
+                  const Icon = category.icon || Boxes;
+                  const isActiveCat = i === activeCatIdx;
+                  const hasCatProjects = categoryOffsets[i] !== -1;
+                  const count = category.projects.length;
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => jumpToCategory(i)}
+                      disabled={!hasCatProjects}
+                      className={`w-full flex items-center gap-3 px-4 py-4 text-left border-b border-white/12 last:border-b-0 ${
+                        isActiveCat ? "bg-white/18" : "hover:bg-white/10"
+                      } ${hasCatProjects ? "" : "opacity-50"}`}
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/10">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold leading-tight">{category.label}</p>
+                        <p className="text-xs text-white/60">{count} progetti</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex-1 px-4 pt-6 flex flex-col items-center relative z-10">
           {!hasProjects && (
             <div className="flex-1 w-full flex flex-col items-center justify-center text-center text-white/80">
@@ -186,28 +257,8 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
           {hasProjects && (
             <>
               <div className="relative flex-1 w-full flex items-center justify-center">
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30">
-                  {CATEGORIES.map((category, i) => {
-                    const Icon = category.icon || Boxes;
-                    const isActiveCat = i === activeCatIdx;
-                    const hasCatProjects = categoryOffsets[i] !== -1;
-                    return (
-                      <button
-                        key={category.id}
-                        onClick={() => jumpToCategory(i)}
-                        disabled={!hasCatProjects}
-                        className={`w-16 flex flex-col items-center gap-1 rounded-2xl border px-2 py-3 text-[10px] font-medium backdrop-blur text-center leading-tight ${
-                          isActiveCat ? "border-white/45 bg-white/25 text-white" : "border-white/15 bg-white/10 text-white/70 hover:bg-white/15"
-                        } ${hasCatProjects ? "" : "opacity-50"}`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="whitespace-normal">{category.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
                 <div
-                  className="relative w-full max-w-[280px] aspect-[3/4] ml-20"
+                  className="relative w-full max-w-[280px] aspect-[3/4]"
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
