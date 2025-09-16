@@ -38,16 +38,13 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
       const lastIndex = Math.max(0, safeLen - 1);
       const last = inner.querySelector(`[data-item-index="${lastIndex}"]`) as HTMLElement | null;
       const viewport = scroller.clientWidth || 0;
-      const basePad = Math.max(24, Math.round((viewport - first.offsetWidth) / 2));
-      let trailingPad = basePad;
+      const firstWidth = first.offsetWidth || 180;
+      const lastWidth = last?.offsetWidth || firstWidth;
+      const startPad = Math.max(24, Math.round((viewport - firstWidth) / 2));
+      // Ensure plenty of trailing space so the final card can align to center even on narrow screens.
+      const trailingPad = Math.max(startPad, Math.round(viewport / 2 + lastWidth / 2));
 
-      if (last) {
-        const trailingBase = Math.max(24, Math.round((viewport - last.offsetWidth) / 2));
-        // add a little buffer so rounding never prevents the final card from centering
-        trailingPad = Math.max(basePad, trailingBase + 24);
-      }
-
-      const nextPad = { start: basePad, end: trailingPad };
+      const nextPad = { start: startPad, end: trailingPad };
       setSidePad((current) => (current.start === nextPad.start && current.end === nextPad.end ? current : nextPad));
     };
     computePad();
