@@ -5,29 +5,47 @@ import { CATEGORIES, ShowcaseProps } from "./shared";
 import { Boxes, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function MobileShowcase({ initialIndex = 0, className, onSelect }: ShowcaseProps) {
-  const [catIndex, setCatIndex] = useState(0);
-  const currentCat = CATEGORIES[catIndex];
-  const projects = currentCat.projects;
-  const safeLen = projects.length;
+  const flattened = useMemo(() => {
+    const entries: { project: typeof CATEGORIES[number]["projects"][number]; catIdx: number; projectIdx: number }[] = [];
+    CATEGORIES.forEach((category, catIdx) => {
+      category.projects.forEach((project, projectIdx) => {
+        entries.push({ project, catIdx, projectIdx });
+      });
+    });
+    return entries;
+  }, []);
+
+  const safeLen = flattened.length;
   const hasProjects = safeLen > 0;
-  const initialSafeIndex = hasProjects ? Math.min(Math.max(0, initialIndex), safeLen - 1) : 0;
-  const [index, setIndex] = useState(initialSafeIndex);
+  const boundedInitialIndex = hasProjects ? Math.min(Math.max(0, initialIndex), safeLen - 1) : 0;
+  const [index, setIndex] = useState(boundedInitialIndex);
+  const [catIndex, setCatIndex] = useState(() => (hasProjects ? flattened[boundedInitialIndex].catIdx : 0));
+  const currentCat = CATEGORIES[catIndex] || CATEGORIES[0];
 
   useEffect(() => {
     if (!hasProjects) {
       setIndex(0);
+      setCatIndex(0);
       return;
     }
-    setIndex((prev) => Math.min(prev, safeLen - 1));
-  }, [safeLen]);
+    setIndex((prev) => {
+      const next = Math.min(Math.max(prev, 0), safeLen - 1);
+      return next;
+    });
+  }, [hasProjects, safeLen]);
 
   useEffect(() => {
-    if (!hasProjects) {
-      setIndex(0);
-      return;
-    }
-    setIndex(0);
-  }, [catIndex, hasProjects]);
+    if (!hasProjects) return;
+    setIndex(Math.min(Math.max(initialIndex, 0), safeLen - 1));
+  }, [initialIndex, hasProjects, safeLen]);
+
+  const categoryOffsets = useMemo(() => {
+    const offsets = new Array(CATEGORIES.length).fill(-1);
+    flattened.forEach((entry, idx) => {
+      if (offsets[entry.catIdx] === -1) offsets[entry.catIdx] = idx;
+    });
+    return offsets;
+  }, [flattened]);
 
   const goPrev = () => {
     if (!hasProjects) return;
@@ -39,17 +57,21 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     setIndex((prev) => (prev + 1) % safeLen);
   };
 
-  const active = hasProjects ? projects[index] : undefined;
+  const activeEntry = hasProjects ? flattened[index] : undefined;
+  const activeProject = activeEntry?.project;
 
   useEffect(() => {
-    if (active) onSelect?.(active, index);
-  }, [active, index, onSelect]);
+    if (activeEntry) {
+      setCatIndex(activeEntry.catIdx);
+      onSelect?.(activeEntry.project, activeEntry.projectIdx);
+    }
+  }, [activeEntry, onSelect]);
 
   const bgGradient = useMemo(() => {
-    const from = active?.palette?.from || "#0ea5e9";
-    const to = active?.palette?.to || "#8b5cf6";
+    const from = activeProject?.palette?.from || "#0ea5e9";
+    const to = activeProject?.palette?.to || "#8b5cf6";
     return `linear-gradient(115deg, ${from}, ${to})`;
-  }, [active]);
+  }, [activeProject]);
 
   const swipeRef = useRef<{ pointerId: number; startX: number; lastX: number; fired: boolean } | null>(null);
 
@@ -123,7 +145,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
         <div className="absolute inset-0" style={{ background: bgGradient }} />
         <AnimatePresence mode="wait">
           <motion.div
-            key={`bg-${currentCat.id}-${active?.id}`}
+            key={`bg-${currentCat.id}-${activeProject?.id}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -150,13 +172,19 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
             {CATEGORIES.map((category, i) => {
               const Icon = category.icon || Boxes;
               const isActiveCat = i === catIndex;
+              const firstIdx = categoryOffsets[i];
+              const hasCatProjects = firstIdx !== -1;
               return (
                 <button
                   key={category.id}
-                  onClick={() => setCatIndex(i)}
+                  onClick={() => {
+                    setCatIndex(i);
+                    if (hasCatProjects) setIndex(firstIdx);
+                  }}
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur ${
                     isActiveCat ? "border-white/40 bg-white/15" : "border-white/15 bg-white/5 hover:bg-white/10"
-                  }`}
+                  } ${hasCatProjects ? "" : "opacity-50"}`}
+                  disabled={!hasCatProjects}
                 >
                   <Icon className="h-4 w-4" />
                   <span className="text-sm whitespace-nowrap">{category.label}</span>
@@ -187,7 +215,8 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                   onPointerCancel={onPointerCancel}
                   style={{ touchAction: "pan-y" }}
                 >
-                  {projects.map((project, i) => {
+                  {flattened.map((entry, i) => {
+                    const project = entry.project;
                     const offset = computeOffset(i);
                     const depth = Math.abs(offset);
                     if (depth > 2) return null;
@@ -245,24 +274,24 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                 </div>
               </div>
 
-              {active && (
+              {activeProject && (
                 <div className="mt-6 text-center px-4">
-                  <p className="text-lg font-semibold">{active.title}</p>
-                  {active.subtitle && <p className="mt-1 text-sm text-white/70">{active.subtitle}</p>}
+                  <p className="text-lg font-semibold">{activeProject.title}</p>
+                  {activeProject.subtitle && <p className="mt-1 text-sm text-white/70">{activeProject.subtitle}</p>}
                 </div>
               )}
 
               <div className="mt-6 flex items-center justify-center gap-2">
-                {projects.map((project, i) => {
+                {flattened.map((entry, i) => {
                   const isActiveDot = i === index;
                   return (
                     <button
-                      key={project.id}
+                      key={`${entry.catIdx}-${entry.project.id}`}
                       onClick={() => setIndex(i)}
                       className={`h-2.5 w-2.5 rounded-full transition ${
                         isActiveDot ? "bg-white" : "bg-white/40 hover:bg-white/70"
                       }`}
-                      aria-label={`Vai al progetto ${project.title}`}
+                      aria-label={`Vai al progetto ${entry.project.title}`}
                     />
                   );
                 })}
