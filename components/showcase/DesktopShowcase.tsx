@@ -1,10 +1,13 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Info, History, Link as LinkIcon, Play } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { CATEGORIES, InfoCard, MenuItem, ShowcaseProps } from "./shared";
+import { CATEGORIES, ShowcaseProps } from "./shared";
 import { Boxes } from "lucide-react";
+
+const CARD_WIDTH = 230;
+const CARD_HEIGHT = 260;
+const ACTIVE_CARD_SCALE = 1.13;
+const INACTIVE_CARD_SCALE = 0.87;
 
 export default function DesktopShowcase({ initialIndex = 0, onOpen, className }: ShowcaseProps) {
   const [catIndex, setCatIndex] = useState(0);
@@ -45,7 +48,7 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [active, safeLen, sectionActive]);
+  }, [active, safeLen, sectionActive, onOpen]);
 
   const bgGradient = useMemo(() => {
     const from = active?.palette?.from || '#0ea5e9';
@@ -66,7 +69,7 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
         }} animate={{ backgroundPosition: ['0% 0%','100% 100%'] }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' }} />
       </div>
 
-      <div className="relative min-h-[70vh] lg:min-h-[76vh] flex flex-col text-white pb-8">
+      <div className="relative min-h-[70vh] lg:min-h-[76vh] flex flex-col text-white pb-24">
         <div className="px-4 pt-3">
           <div className="flex gap-2 overflow-x-auto pb-2 justify-center">
             {CATEGORIES.map((c,i)=>{
@@ -80,44 +83,40 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
           </div>
         </div>
 
-        <div className="px-3 sm:px-5 md:px-8 pt-2 flex-1 grid grid-cols-12 gap-5">
-          <div className="hidden md:flex col-span-12 md:col-span-3 lg:col-span-2 flex-col justify-end">
-            <div className="rounded-xl bg-black/25 border border-white/10 overflow-hidden">
-              <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2"><Play className="h-4 w-4" /><span className="text-sm font-medium">Start</span></div>
-              <nav className="p-2 text-sm">
-                <MenuItem icon={<Info className="h-4 w-4" />} label="Overview" value={active?.subtitle || '—'} />
-                <MenuItem icon={<History className="h-4 w-4" />} label="Categoria" value={CATEGORIES[catIndex].label} />
-                <MenuItem icon={<LinkIcon className="h-4 w-4" />} label="Apri" action={() => active && (onOpen ? onOpen(active) : window.open(active.href || '#','_blank'))} />
-              </nav>
-              {!!active?.tags?.length && (<div className="px-3 pb-3 pt-1 flex flex-wrap gap-2">{active.tags!.map(t=> (<Badge key={t} className="bg-white/15 border-white/20 text-white">{t}</Badge>))}</div>)}
+        <div className="px-3 sm:px-5 md:px-8 pt-2 flex-1 flex flex-col items-center">
+          <div className="flex-1 flex items-center justify-center w-full">
+            <div className="flex items-end gap-4 flex-wrap justify-center" onMouseLeave={()=>setHoverIndex(null)}>
+              {currentCat.projects.map((p,i)=>{
+                const activeCard = i===displayIndex;
+                return (
+                  <motion.div key={p.id} onMouseEnter={()=>setHoverIndex(i)}
+                    className={`relative shrink-0 rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden ${activeCard ? 'ring-2 ring-white/50' : 'hover:border-white/30'}`}
+                    style={{ width: CARD_WIDTH, height: CARD_HEIGHT, transformOrigin: 'bottom center' }}
+                    initial={{opacity:0, y:16, scale: INACTIVE_CARD_SCALE}}
+                    animate={{opacity:1, y:0, scale: activeCard ? ACTIVE_CARD_SCALE : INACTIVE_CARD_SCALE}}
+                    transition={{delay: i*0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1]}}>
+                    <img src={p.tile || p.cover} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-sm font-semibold line-clamp-1">{p.title}</p>
+                      <p className="text-[11px] text-white/70 line-clamp-1">{p.subtitle}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
+        </div>
 
-          <div className="col-span-12 md:col-span-9 lg:col-span-10 flex flex-col">
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex items-end gap-4">
-                {currentCat.projects.map((p,i)=>{
-                  const activeCard = i===displayIndex;
-                  return (
-                    <motion.div key={p.id} onMouseEnter={()=>setHoverIndex(i)} onMouseLeave={()=>setHoverIndex(null)}
-                      className={`relative shrink-0 rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden ${activeCard ? 'ring-2 ring-white/50' : 'hover:border-white/30'}`}
-                      style={{ width: activeCard ? 260 : 200, height: activeCard ? 300 : 220 }}
-                      initial={{opacity:0, y:16}} animate={{opacity:1, y:0}} transition={{delay: i*0.04}}>
-                      <img src={p.tile || p.cover} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <p className="text-sm font-semibold line-clamp-1">{p.title}</p>
-                        <p className="text-[11px] text-white/70 line-clamp-1">{p.subtitle}</p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="mt-4 grid grid-cols-12">
-              <div className="col-span-12 md:col-span-4 lg:col-span-3">
-                <InfoCard title={(active?.info?.[0]?.title) || 'Dettagli progetto'} thumb={active?.info?.[0]?.thumb} subtitle={active?.title} />
-              </div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-6">
+          <div
+            className="mx-auto w-full max-w-3xl rounded-full border border-white/10 px-6 py-3 backdrop-blur-sm"
+            style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%)" }}
+          >
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-center text-white/80 text-xs sm:text-sm font-medium">
+              <span>← → Cambia progetto</span>
+              <span>↑ ↓ Cambia categoria</span>
+              <span>⏎ Seleziona</span>
             </div>
           </div>
         </div>
@@ -125,4 +124,3 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
     </div>
   );
 }
-
