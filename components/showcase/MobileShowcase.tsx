@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORIES, ShowcaseProps } from "./shared";
-import { Boxes, ChevronLeft, ChevronRight } from "lucide-react";
+import { Boxes, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function MobileShowcase({ initialIndex = 0, className, onSelect }: ShowcaseProps) {
   const flattened = useMemo(() => {
@@ -19,13 +19,12 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   const hasProjects = safeLen > 0;
   const boundedInitialIndex = hasProjects ? Math.min(Math.max(0, initialIndex), safeLen - 1) : 0;
   const [index, setIndex] = useState(boundedInitialIndex);
-  const [catIndex, setCatIndex] = useState(() => (hasProjects ? flattened[boundedInitialIndex].catIdx : 0));
-  const currentCat = CATEGORIES[catIndex] || CATEGORIES[0];
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
     if (!hasProjects) {
       setIndex(0);
-      setCatIndex(0);
+      setPickerOpen(false);
       return;
     }
     setIndex((prev) => {
@@ -39,14 +38,6 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     setIndex(Math.min(Math.max(initialIndex, 0), safeLen - 1));
   }, [initialIndex, hasProjects, safeLen]);
 
-  const categoryOffsets = useMemo(() => {
-    const offsets = new Array(CATEGORIES.length).fill(-1);
-    flattened.forEach((entry, idx) => {
-      if (offsets[entry.catIdx] === -1) offsets[entry.catIdx] = idx;
-    });
-    return offsets;
-  }, [flattened]);
-
   const goPrev = () => {
     if (!hasProjects) return;
     setIndex((prev) => (prev - 1 + safeLen) % safeLen);
@@ -59,10 +50,22 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
 
   const activeEntry = hasProjects ? flattened[index] : undefined;
   const activeProject = activeEntry?.project;
+  const activeCatIdx = activeEntry?.catIdx ?? 0;
+  const currentCat = CATEGORIES[activeCatIdx] || CATEGORIES[0];
+  const activeCategory = CATEGORIES[activeCatIdx];
+
+  const togglePicker = () => {
+    if (!hasProjects) return;
+    setPickerOpen((open) => !open);
+  };
+
+  const selectProject = (i: number) => {
+    setIndex(i);
+    setPickerOpen(false);
+  };
 
   useEffect(() => {
     if (activeEntry) {
-      setCatIndex(activeEntry.catIdx);
       onSelect?.(activeEntry.project, activeEntry.projectIdx);
     }
   }, [activeEntry, onSelect]);
@@ -89,11 +92,13 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!hasProjects) return;
+    if (event.cancelable) event.preventDefault();
     swipeRef.current = { pointerId: event.pointerId, startX: event.clientX, lastX: event.clientX, fired: false };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.cancelable) event.preventDefault();
     const state = swipeRef.current;
     if (!state || state.pointerId !== event.pointerId || state.fired) {
       if (state && state.pointerId === event.pointerId) {
@@ -109,6 +114,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   };
 
   const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.cancelable) event.preventDefault();
     const state = swipeRef.current;
     if (!state || state.pointerId !== event.pointerId) {
       swipeRef.current = null;
@@ -140,7 +146,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   };
 
   return (
-    <div className={`relative w-full overflow-visible ${className || ""}`}>
+    <div className={`relative w-full overflow-visible ${className || ""}`} style={{ overscrollBehavior: "contain" }}>
       <div className="absolute inset-0">
         <div className="absolute inset-0" style={{ background: bgGradient }} />
         <AnimatePresence mode="wait">
@@ -167,32 +173,75 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
       </div>
 
       <div className="relative min-h-screen flex flex-col text-white pb-16 pt-8">
-        <div className="px-4">
-          <div className="flex gap-2 overflow-x-auto pb-3 justify-center">
-            {CATEGORIES.map((category, i) => {
-              const Icon = category.icon || Boxes;
-              const isActiveCat = i === catIndex;
-              const firstIdx = categoryOffsets[i];
-              const hasCatProjects = firstIdx !== -1;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => {
-                    setCatIndex(i);
-                    if (hasCatProjects) setIndex(firstIdx);
-                  }}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur ${
-                    isActiveCat ? "border-white/40 bg-white/15" : "border-white/15 bg-white/5 hover:bg-white/10"
-                  } ${hasCatProjects ? "" : "opacity-50"}`}
-                  disabled={!hasCatProjects}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="text-sm whitespace-nowrap">{category.label}</span>
-                </button>
-              );
-            })}
+        {hasProjects && (
+          <div className="px-4">
+            <button
+              type="button"
+              onClick={togglePicker}
+              className="mx-auto flex w-full max-w-[320px] items-center justify-between gap-3 rounded-2xl border border-white/25 bg-white/10 px-4 py-3 text-left backdrop-blur-md shadow-lg"
+            >
+              <div className="flex-1">
+                <p className="text-[11px] uppercase tracking-wide text-white/60">Progetto</p>
+                <p className="text-lg font-semibold leading-tight line-clamp-1">{activeProject?.title}</p>
+                {activeCategory && (
+                  <p className="mt-1 text-xs text-white/70 line-clamp-1">{activeCategory.label}</p>
+                )}
+              </div>
+              <ChevronDown className={`h-4 w-4 transition-transform ${pickerOpen ? "rotate-180" : ""}`} />
+            </button>
           </div>
-        </div>
+        )}
+
+        <AnimatePresence>
+          {pickerOpen && hasProjects && (
+            <motion.div
+              key="picker-overlay"
+              className="absolute inset-0 z-40 flex flex-col px-4 pt-24 pb-28 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={togglePicker}
+            >
+              <motion.div
+                initial={{ y: 32, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 32, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="mx-auto w-full max-w-[360px] rounded-3xl border border-white/20 bg-black/55 backdrop-blur-lg shadow-2xl overflow-hidden"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="max-h-[60vh] overflow-y-auto">
+                  {flattened.map((entry, i) => {
+                    const cat = CATEGORIES[entry.catIdx] as (typeof CATEGORIES)[number] | undefined;
+                    const Icon = (cat?.icon || Boxes) as React.ElementType;
+                    const catLabel = cat?.label || "";
+                    const isActiveItem = i === index;
+                    return (
+                      <button
+                        key={`${entry.catIdx}-${entry.project.id}`}
+                        onClick={() => selectProject(i)}
+                        className={`w-full flex items-start gap-3 px-4 py-3 text-left border-b border-white/10 last:border-b-0 ${
+                          isActiveItem ? "bg-white/15" : "hover:bg-white/10"
+                        }`}
+                      >
+                        <Icon className="mt-0.5 h-4 w-4 text-white/70" />
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold leading-tight">{entry.project.title}</p>
+                          {entry.project.subtitle && (
+                            <p className="text-xs text-white/60">{entry.project.subtitle}</p>
+                          )}
+                          <p className="text-[11px] uppercase tracking-wide text-white/45 mt-1">
+                            {catLabel}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="flex-1 px-4 pt-6 flex flex-col items-center">
           {!hasProjects && (
@@ -213,7 +262,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onPointerCancel={onPointerCancel}
-                  style={{ touchAction: "pan-y" }}
+                  style={{ touchAction: "none" }}
                 >
                   {flattened.map((entry, i) => {
                     const project = entry.project;
