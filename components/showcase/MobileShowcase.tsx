@@ -51,25 +51,52 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     return `linear-gradient(115deg, ${from}, ${to})`;
   }, [active]);
 
-  const swipeRef = useRef<{ pointerId: number; startX: number; active: boolean } | null>(null);
+  const swipeRef = useRef<{ pointerId: number; startX: number; lastX: number; fired: boolean } | null>(null);
+
+  const swipeThreshold = 45;
+
+  const triggerSwipe = (dx: number) => {
+    if (Math.abs(dx) <= swipeThreshold) return false;
+    if (dx < 0) {
+      goNext();
+    } else {
+      goPrev();
+    }
+    return true;
+  };
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!hasProjects) return;
-    swipeRef.current = { pointerId: event.pointerId, startX: event.clientX, active: true };
+    swipeRef.current = { pointerId: event.pointerId, startX: event.clientX, lastX: event.clientX, fired: false };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    const data = swipeRef.current;
-    if (!data || !data.active) {
-      swipeRef.current = null;
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const state = swipeRef.current;
+    if (!state || state.pointerId !== event.pointerId || state.fired) {
+      if (state && state.pointerId === event.pointerId) {
+        state.lastX = event.clientX;
+      }
       return;
     }
-    const dx = event.clientX - data.startX;
-    if (Math.abs(dx) > 40) {
-      if (dx < 0) goNext(); else goPrev();
+    const dx = event.clientX - state.startX;
+    state.lastX = event.clientX;
+    if (triggerSwipe(dx)) {
+      state.fired = true;
     }
-    swipeRef.current = null;
+  };
+
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const state = swipeRef.current;
+    if (!state || state.pointerId !== event.pointerId) {
+      swipeRef.current = null;
+    } else {
+      const dx = (state.fired ? state.lastX : event.clientX) - state.startX;
+      if (!state.fired) {
+        triggerSwipe(dx);
+      }
+      swipeRef.current = null;
+    }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -153,11 +180,11 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
             <>
               <div className="relative flex-1 w-full flex items-center justify-center">
                 <div
-                  className="relative w-full max-w-[320px] aspect-[3/4]"
+                  className="relative w-full max-w-[280px] aspect-[3/4]"
                   onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onPointerCancel={onPointerCancel}
-                  onPointerLeave={onPointerCancel}
                   style={{ touchAction: "pan-y" }}
                 >
                   {projects.map((project, i) => {
@@ -165,11 +192,11 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                     const depth = Math.abs(offset);
                     if (depth > 2) return null;
                     const isActive = offset === 0;
-                    const scale = Math.max(0.78, 1 - depth * 0.12);
-                    const translateX = offset * 42;
-                    const translateY = depth * 26;
-                    const rotate = offset * -7;
-                    const opacity = Math.max(0.35, 1 - depth * 0.28);
+                    const scale = Math.max(0.74, 1 - depth * 0.11);
+                    const translateX = offset * 36;
+                    const translateY = depth * 22;
+                    const rotate = offset * -6;
+                    const opacity = Math.max(0.35, 1 - depth * 0.26);
 
                     return (
                       <motion.div
