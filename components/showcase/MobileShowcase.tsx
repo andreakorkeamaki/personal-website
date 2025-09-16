@@ -16,7 +16,8 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   const [proximities, setProximities] = useState<number[]>([]);
   const velocityRef = useRef(0); // px/s (approx)
   const lastRef = useRef({ x: 0, t: 0 });
-  const [sidePad, setSidePad] = useState(24); // dynamic padding so first/last center
+  const indexRef = useRef(index);
+  const [sidePad, setSidePad] = useState<{ start: number; end: number }>({ start: 24, end: 24 }); // dynamic padding so first/last center
 
   useEffect(() => setIndex(0), [catIndex]);
   // re-center when index reset due to category change
@@ -31,17 +32,28 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   useEffect(() => {
     const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
     const computePad = () => {
-      const itemEl = inner.querySelector('[data-item-index="0"]') as HTMLElement | null;
-      const cardW = itemEl?.offsetWidth || 180;
-      const gap = 16; // gap-4
-      const fudge = 40; // increased extra padding to ensure last fully centers
-      const pad = Math.max(24, Math.round(scroller.clientWidth / 2 - cardW / 2 + gap / 2 + fudge));
-      setSidePad(pad);
+      const first = inner.querySelector('[data-item-index="0"]') as HTMLElement | null;
+      if (!first) return;
+
+      const lastIndex = Math.max(0, safeLen - 1);
+      const last = inner.querySelector(`[data-item-index="${lastIndex}"]`) as HTMLElement | null;
+      const viewport = scroller.clientWidth || 0;
+      const basePad = Math.max(24, Math.round((viewport - first.offsetWidth) / 2));
+      let trailingPad = basePad;
+
+      if (last) {
+        const trailingBase = Math.max(24, Math.round((viewport - last.offsetWidth) / 2));
+        // add a little buffer so rounding never prevents the final card from centering
+        trailingPad = Math.max(basePad, trailingBase + 24);
+      }
+
+      const nextPad = { start: basePad, end: trailingPad };
+      setSidePad((current) => (current.start === nextPad.start && current.end === nextPad.end ? current : nextPad));
     };
     computePad();
     window.addEventListener('resize', computePad);
     return () => window.removeEventListener('resize', computePad);
-  }, [catIndex, safeLen]); // added safeLen dependency
+  }, [catIndex, safeLen]);
 
   // Keep center card selected and snap to it when scrolling stops
   useEffect(() => {
@@ -130,12 +142,14 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   }, [index]);
 
   // Re-center when dynamic side padding changes (e.g., on first layout or rotation)
+  useEffect(() => { indexRef.current = index; }, [index]);
+
   useEffect(() => {
     const scroller = railScrollRef.current; const inner = railInnerRef.current; if (!scroller || !inner) return;
-    const el = inner.querySelector(`[data-item-index="${index}"]`) as HTMLElement | null; if (!el) return;
+    const el = inner.querySelector(`[data-item-index="${indexRef.current}"]`) as HTMLElement | null; if (!el) return;
     const target = el.offsetLeft + el.offsetWidth / 2 - scroller.clientWidth / 2;
     scroller.scrollTo({ left: target, behavior: 'smooth' });
-  }, [sidePad]);
+  }, [sidePad.start, sidePad.end]);
 
   const active = currentCat.projects[index];
   // Notify selection changes
@@ -180,7 +194,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
           {/* Center band indicator (fixed over the rail) */}
           <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-24 bottom-24 rounded-xl bg-white/5 ring-1 ring-white/10" style={{ width: '60%', maxWidth: 320, minWidth: 160, backdropFilter: 'blur(2px)' }} />
           <div ref={railScrollRef} className="w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] scrollbar-none touch-pan-x" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch' as any }}>
-            <div ref={railInnerRef} className="flex items-end gap-4 pb-10" style={{ paddingLeft: sidePad, paddingRight: sidePad, perspective: 1000 }}>
+            <div ref={railInnerRef} className="flex items-end gap-4 pb-10" style={{ paddingLeft: sidePad.start, paddingRight: sidePad.end, perspective: 1000 }}>
               {!hasProjects && (
                 <div className="mx-auto my-10 text-center text-white/80">
                   <div className="mx-auto h-36 w-64 rounded-xl border border-white/15 bg-black/20 backdrop-blur-sm flex items-center justify-center">Nessun progetto</div>
