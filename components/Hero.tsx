@@ -23,6 +23,13 @@ export default function Hero() {
       {/* Gradient accent glow */}
       <div className="gradient-accent pointer-events-none absolute inset-0" />
 
+      {/* Subtle hint */}
+      <div className="absolute top-4 left-0 right-0 z-10 flex justify-center pointer-events-none">
+        <span className="text-[10px] sm:text-xs uppercase tracking-widest text-[#F5EDCE]/50">
+          Double click
+        </span>
+      </div>
+
       {/* Centered Text */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-6 pointer-events-none">
         <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#FFFDF6] text-shadow-soft">

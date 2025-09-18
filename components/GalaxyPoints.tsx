@@ -94,6 +94,8 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
   const shapesRef = useRef<{ sets: Float32Array[]; idxA: number; idxB: number }>(
     { sets: [], idxA: 0, idxB: 1 }
   );
+  // Optional custom base shape (snapshot of current positions on double click)
+  const customBaseRef = useRef<Float32Array | null>(null);
 
   // Pseudo-random helper deterministic per index
   const rnd = (i: number, k: number) => {
@@ -249,7 +251,7 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     if (shapesRef.current.sets.length === 0) buildShapes(offsetRef.current);
 
     const sets = shapesRef.current.sets;
-    const a = sets[shapesRef.current.idxA];
+    const a = customBaseRef.current ?? sets[shapesRef.current.idxA];
     const b = sets[shapesRef.current.idxB];
     const dur = morphDurationRef.current;
     const s = Math.min(1, Math.max(0, (t - morphStartRef.current) / dur));
@@ -347,6 +349,8 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
       shapesRef.current.idxA = shapesRef.current.idxB;
       shapesRef.current.idxB = (shapesRef.current.idxB + 1) % shapesRef.current.sets.length;
       morphStartRef.current = t;
+      // Clear any custom base once a morph completes
+      customBaseRef.current = null;
     }
   });
 
@@ -390,14 +394,54 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     // Double click to regenerate and restart cycle
     const canvasEl: HTMLCanvasElement | null = (gl as any)?.domElement ?? null;
     const onDblClick = () => {
-      // Randomly choose a new target shape (no regeneration)
+      // Ensure shapes are available
+      if (shapesRef.current.sets.length === 0) buildShapes(offsetRef.current);
+
       const setsLen = shapesRef.current.sets.length;
-      if (setsLen > 1) {
-        const current = shapesRef.current.idxA; // current base shape
-        let next = Math.floor(Math.random() * (setsLen - 1));
-        if (next >= current) next += 1; // skip current
-        shapesRef.current.idxB = next;
+      if (setsLen === 0) return;
+
+      // Choose a random shape index different from current base
+      const currentA = shapesRef.current.idxA;
+      let targetIndex = Math.floor(Math.random() * (setsLen - 1));
+      if (targetIndex >= currentA) targetIndex += 1; // skip current
+
+      // Jump immediately to the chosen shape, then resume the normal cycle from there
+      const pts = pointsRef.current;
+      const geo = pts?.geometry as THREE.BufferGeometry | undefined;
+      const posAttr = geo?.getAttribute('position') as THREE.BufferAttribute | undefined;
+      const colAttr = geo?.getAttribute('color') as THREE.BufferAttribute | undefined;
+      const seedAttr = geo?.getAttribute('aSeed') as THREE.BufferAttribute | undefined;
+      if (geo && posAttr && colAttr && seedAttr) {
+        const target = shapesRef.current.sets[targetIndex];
+        // Set positions to the chosen shape immediately
+        for (let i = 0; i < posAttr.count; i++) {
+          const ix = i * 3;
+          posAttr.setXYZ(i, target[ix], target[ix + 1], target[ix + 2]);
+          // Also set colors to the chosen palette baseline for an instant visual snap
+          const palette = colorPalettes[targetIndex];
+          const seedColor = seedAttr.getX(i);
+          const t1 = (Math.sin(seedColor * 12.9898) * 0.5 + 0.5);
+          const t2 = (Math.sin(seedColor * 78.233) * 0.5 + 0.5) * (1 - t1);
+          const t3 = 1 - t1 - t2;
+          const baseColor = palette[0].clone().multiplyScalar(t1)
+            .add(palette[1].clone().multiplyScalar(t2))
+            .add(palette[2].clone().multiplyScalar(t3));
+          colAttr.setXYZ(i, baseColor.r, baseColor.g, baseColor.b);
+        }
+        posAttr.needsUpdate = true;
+        colAttr.needsUpdate = true;
       }
+
+      // Set the new cycle starting point
+      shapesRef.current.idxA = targetIndex;
+      shapesRef.current.idxB = (targetIndex + 1) % setsLen;
+      customBaseRef.current = null; // use canonical shape as base
+
+      // Snap background to the selected shape immediately
+      const bg = backgroundColors[targetIndex];
+      gl.setClearColor(bg);
+
+      // Restart morph from this new base
       morphStartRef.current = lastTimeRef.current;
     };
     if (canvasEl) canvasEl.addEventListener('dblclick', onDblClick);
