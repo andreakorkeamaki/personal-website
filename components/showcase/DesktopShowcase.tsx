@@ -12,16 +12,38 @@ const INACTIVE_CARD_SCALE = 0.87;
 export default function DesktopShowcase({ initialIndex = 0, onOpen, className }: ShowcaseProps) {
   const [catIndex, setCatIndex] = useState(0);
   const currentCat = CATEGORIES[catIndex];
-  const safeLen = Math.max(1, currentCat.projects.length);
+  const projectCount = currentCat.projects.length;
+  const safeLen = Math.max(1, projectCount);
   const [index, setIndex] = useState(Math.min(Math.max(0, initialIndex), safeLen - 1));
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const displayIndex = hoverIndex != null ? hoverIndex : index;
   const active = currentCat.projects[displayIndex % safeLen];
 
-  useEffect(() => setIndex(0), [catIndex]);
-
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const nextIndexRef = useRef<number | null>(null);
+  const prevCatRef = useRef(catIndex);
   const [sectionActive, setSectionActive] = useState(false);
+
+  useEffect(() => {
+    const catChanged = prevCatRef.current !== catIndex;
+    prevCatRef.current = catIndex;
+    setHoverIndex(null);
+    setIndex((prev) => {
+      if (projectCount === 0) {
+        nextIndexRef.current = null;
+        return 0;
+      }
+      if (nextIndexRef.current != null) {
+        const target = Math.min(Math.max(nextIndexRef.current, 0), projectCount - 1);
+        nextIndexRef.current = null;
+        return target;
+      }
+      if (catChanged) {
+        return 0;
+      }
+      return Math.min(prev, projectCount - 1);
+    });
+  }, [catIndex, projectCount]);
 
   useEffect(() => {
     const isTyping = (el: Element | null) => {
@@ -40,15 +62,56 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
       if (isTyping(e.target as Element)) return;
       const within = sectionActive || isInViewport(rootRef.current);
       if (!within) return;
-      if (e.key === 'ArrowRight') { e.preventDefault(); setHoverIndex(null); setIndex((i)=> (i+1)%safeLen); }
-      if (e.key === 'ArrowLeft')  { e.preventDefault(); setHoverIndex(null); setIndex((i)=> (i-1+safeLen)%safeLen); }
-      if (e.key === 'ArrowUp')    { e.preventDefault(); setHoverIndex(null); setCatIndex((i)=> (i-1+CATEGORIES.length)%CATEGORIES.length); }
-      if (e.key === 'ArrowDown')  { e.preventDefault(); setHoverIndex(null); setCatIndex((i)=> (i+1)%CATEGORIES.length); }
-      if (e.key === 'Enter' && active) { e.preventDefault(); onOpen ? onOpen(active) : window.open(active.href || '#','_blank'); }
+      const totalCats = CATEGORIES.length;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setHoverIndex(null);
+        const next = index + 1;
+        if (next < projectCount) {
+          setIndex(next);
+        } else {
+          const nextCat = (catIndex + 1) % totalCats;
+          nextIndexRef.current = 0;
+          setCatIndex(nextCat);
+        }
+        return;
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setHoverIndex(null);
+        const prev = index - 1;
+        if (prev >= 0) {
+          setIndex(prev);
+        } else {
+          const prevCat = (catIndex - 1 + totalCats) % totalCats;
+          const prevCount = CATEGORIES[prevCat].projects.length;
+          nextIndexRef.current = prevCount > 0 ? prevCount - 1 : 0;
+          setCatIndex(prevCat);
+        }
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        nextIndexRef.current = 0;
+        setHoverIndex(null);
+        setCatIndex((i)=> (i-1+totalCats)%totalCats);
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        nextIndexRef.current = 0;
+        setHoverIndex(null);
+        setCatIndex((i)=> (i+1)%totalCats);
+        return;
+      }
+      if (e.key === 'Enter' && active) {
+        e.preventDefault();
+        onOpen ? onOpen(active) : window.open(active.href || '#','_blank');
+      }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [active, safeLen, sectionActive, onOpen]);
+  }, [active, projectCount, sectionActive, onOpen, index, catIndex]);
 
   const bgGradient = useMemo(() => {
     const from = active?.palette?.from || '#0ea5e9';
@@ -56,13 +119,52 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
     return `linear-gradient(115deg, ${from}, ${to})`;
   }, [active]);
 
+  const bgImage = useMemo(() => {
+    // Use project-specific image as blurred overlay when available
+    if (active?.tile || active?.cover) {
+      return `url('${active.tile || active.cover}')`;
+    }
+    return null;
+  }, [active]);
+
+  const gradientOpacity = useMemo(() => {
+    // Make gradient more transparent when there's an image overlay
+    return bgImage ? '0.7' : '1';
+  }, [bgImage]);
+
   return (
     <div ref={rootRef} className={`relative w-full overflow-visible ${className || ''}`}
       onMouseEnter={()=>setSectionActive(true)} onMouseLeave={()=>setSectionActive(false)} onFocusCapture={()=>setSectionActive(true)} onBlurCapture={()=>setSectionActive(false)}>
       <div className="absolute inset-0">
         <div className="absolute inset-0" style={{ background: bgGradient }} />
+        {bgImage && (
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              backgroundImage: bgImage,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              filter: 'blur(8px) brightness(0.6)'
+            }}
+          />
+        )}
         <AnimatePresence mode="wait">
-          <motion.div key={`bg-${currentCat.id}-${active?.id}`} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.5, ease:[0.22,1,0.36,1]}} className="absolute inset-0" style={{ background: bgGradient }} />
+          <motion.div key={`bg-${currentCat.id}-${active?.id}`} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.5, ease:[0.22,1,0.36,1]}} className="absolute inset-0">
+            <div style={{ background: `linear-gradient(115deg, rgba(30, 165, 233, ${gradientOpacity}), rgba(139, 92, 246, ${gradientOpacity}))` }} />
+            {bgImage && (
+              <div
+                style={{
+                  backgroundImage: bgImage,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  filter: 'blur(8px) brightness(0.6)'
+                }}
+                className="opacity-40"
+              />
+            )}
+          </motion.div>
         </AnimatePresence>
         <motion.div aria-hidden className="absolute inset-0" style={{
           backgroundImage: "radial-gradient(1200px 400px at -10% 110%, rgba(255,255,255,0.14), transparent), radial-gradient(900px 360px at 120% -10%, rgba(255,255,255,0.12), transparent)"

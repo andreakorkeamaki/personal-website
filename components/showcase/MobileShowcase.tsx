@@ -81,6 +81,19 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     return `linear-gradient(115deg, ${from}, ${to})`;
   }, [activeProject]);
 
+  const bgImage = useMemo(() => {
+    // Use project-specific image as blurred overlay when available
+    if (activeProject?.tile || activeProject?.cover) {
+      return `url('${activeProject.tile || activeProject.cover}')`;
+    }
+    return null;
+  }, [activeProject]);
+
+  const gradientOpacity = useMemo(() => {
+    // Make gradient more transparent when there's an image overlay
+    return bgImage ? '0.7' : '1';
+  }, [bgImage]);
+
   const swipeRef = useRef<{ pointerId: number; startX: number; lastX: number; fired: boolean } | null>(null);
 
   const swipeThreshold = 45;
@@ -154,6 +167,18 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     <div className={`relative w-full overflow-visible ${className || ""}`} style={{ overscrollBehavior: "contain" }}>
       <div className="absolute inset-0">
         <div className="absolute inset-0" style={{ background: bgGradient }} />
+        {bgImage && (
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              backgroundImage: bgImage,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              filter: 'blur(8px) brightness(0.6)'
+            }}
+          />
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={`bg-${currentCat.id}-${activeProject?.id}`}
@@ -162,8 +187,21 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
             exit={{ opacity: 0 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0"
-            style={{ background: bgGradient }}
-          />
+          >
+            <div style={{ background: `linear-gradient(115deg, rgba(30, 165, 233, ${gradientOpacity}), rgba(139, 92, 246, ${gradientOpacity}))` }} />
+            {bgImage && (
+              <div
+                style={{
+                  backgroundImage: bgImage,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  filter: 'blur(8px) brightness(0.6)'
+                }}
+                className="opacity-40"
+              />
+            )}
+          </motion.div>
         </AnimatePresence>
         <motion.div
           aria-hidden
@@ -300,9 +338,13 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                         <img src={project.tile || project.cover} alt={project.title} className="absolute inset-0 h-full w-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <p className="text-base font-semibold line-clamp-1">{project.title}</p>
-                          {project.subtitle && <p className="mt-1 text-xs text-white/70 line-clamp-1">{project.subtitle}</p>}
-                          {catLabel && <p className="text-[11px] text-white/60 mt-1 uppercase tracking-wide">{catLabel}</p>}
+                          <div className="rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md shadow-lg overflow-hidden">
+                            <div className="px-4 py-2">
+                              <p className="text-base font-semibold line-clamp-1">{project.title}</p>
+                              {project.subtitle && <p className="mt-1 text-xs text-white/70 line-clamp-1">{project.subtitle}</p>}
+                              {catLabel && <p className="text-[11px] text-white/60 mt-1 uppercase tracking-wide">{catLabel}</p>}
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     );
@@ -327,28 +369,26 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                 </div>
               </div>
 
-              {activeProject && (
-                <div className="mt-6 text-center px-4">
-                  <p className="text-lg font-semibold">{activeProject.title}</p>
-                  {activeProject.subtitle && <p className="mt-1 text-sm text-white/70">{activeProject.subtitle}</p>}
-                  {activeCategory && <p className="mt-2 text-xs uppercase tracking-wide text-white/60">{activeCategory.label}</p>}
+              <div className="mt-6 flex items-center justify-center gap-2 px-4">
+                <div className="flex items-center justify-center rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md shadow-lg px-4 py-2">
+                  {flattened.map((entry, i) => {
+                    const isActiveDot = i === index;
+                    return (
+                      <button
+                        key={`dot-${i}`}
+                        onClick={() => setIndex(i)}
+                        className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
+                          isActiveDot ? "bg-white shadow-lg scale-125" : "bg-white/40 hover:bg-white/70"
+                        }`}
+                        aria-label={`Vai al progetto ${entry.project.title}`}
+                        style={{
+                          transform: isActiveDot ? 'scale(1.25)' : 'scale(1)',
+                          opacity: isActiveDot ? 1 : 0.6
+                        }}
+                      />
+                    );
+                  })}
                 </div>
-              )}
-
-              <div className="mt-6 flex items-center justify-center gap-2">
-                {flattened.map((entry, i) => {
-                  const isActiveDot = i === index;
-                  return (
-                    <button
-                      key={`${entry.catIdx}-${entry.project.id}`}
-                      onClick={() => setIndex(i)}
-                      className={`h-2.5 w-2.5 rounded-full transition ${
-                        isActiveDot ? "bg-white" : "bg-white/40 hover:bg-white/70"
-                      }`}
-                      aria-label={`Vai al progetto ${entry.project.title}`}
-                    />
-                  );
-                })}
               </div>
             </>
           )}
