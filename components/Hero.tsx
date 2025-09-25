@@ -19,10 +19,12 @@ export default function Hero() {
       setInView(visibilityState.intersection && visibilityState.page);
     };
 
-    let fallbackHandler: (() => void) | null = null;
+    let fallbackHandler: ((event?: Event) => void) | null = null;
     let observer: IntersectionObserver | null = null;
 
-    if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+    const hasWindow = typeof window !== 'undefined';
+
+    if (hasWindow && 'IntersectionObserver' in window) {
       observer = new IntersectionObserver(
         (entries) => {
           const entry = entries.find((item) => item.target === target);
@@ -34,7 +36,7 @@ export default function Hero() {
         { threshold: [0, 0.15, 0.35, 0.6, 0.85, 1] }
       );
       observer.observe(target);
-    } else {
+    } else if (hasWindow) {
       fallbackHandler = () => {
         const rect = target.getBoundingClientRect();
         const viewHeight = window.innerHeight || document.documentElement.clientHeight;
@@ -53,16 +55,20 @@ export default function Hero() {
       updateActive();
     };
 
-    document.addEventListener('visibilitychange', handlePageVisibility);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handlePageVisibility);
+    }
     updateActive();
 
     return () => {
       observer?.disconnect();
-      if (fallbackHandler) {
+      if (fallbackHandler && hasWindow) {
         window.removeEventListener('scroll', fallbackHandler);
         window.removeEventListener('resize', fallbackHandler);
       }
-      document.removeEventListener('visibilitychange', handlePageVisibility);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handlePageVisibility);
+      }
     };
   }, []);
 
