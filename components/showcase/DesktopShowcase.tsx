@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH } from "./shared";
 import { Boxes } from "lucide-react";
 
 const CARD_WIDTH = 230;
@@ -119,56 +119,49 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
     return `linear-gradient(115deg, ${from}, ${to})`;
   }, [active]);
 
-  const bgImage = useMemo(() => {
-    // Use project-specific image as blurred overlay when available
-    if (active?.tile || active?.cover) {
-      return `url('${active.tile || active.cover}')`;
-    }
-    return null;
-  }, [active]);
-
-  const gradientOpacity = useMemo(() => {
-    // Make gradient more transparent when there's an image overlay
-    return bgImage ? '0.7' : '1';
-  }, [bgImage]);
+  const bgImageSrc = active?.tile || active?.cover || null;
+  const hasBgImage = !!bgImageSrc;
 
   return (
     <div ref={rootRef} className={`relative w-full overflow-visible ${className || ''}`}
       onMouseEnter={()=>setSectionActive(true)} onMouseLeave={()=>setSectionActive(false)} onFocusCapture={()=>setSectionActive(true)} onBlurCapture={()=>setSectionActive(false)}>
       <div className="absolute inset-0">
-        <div className="absolute inset-0" style={{ background: bgGradient }} />
-        {bgImage && (
-          <div
-            className="absolute inset-0 opacity-40"
-            style={{
-              backgroundImage: bgImage,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              filter: 'blur(8px) brightness(0.6)'
-            }}
-          />
-        )}
-        <AnimatePresence mode="wait">
-          <motion.div key={`bg-${currentCat.id}-${active?.id}`} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.5, ease:[0.22,1,0.36,1]}} className="absolute inset-0">
-            <div style={{ background: `linear-gradient(115deg, rgba(30, 165, 233, ${gradientOpacity}), rgba(139, 92, 246, ${gradientOpacity}))` }} />
-            {bgImage && (
+        {hasBgImage ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`bg-${currentCat.id}-${active?.id}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-0"
+            >
               <div
+                className="absolute inset-0"
                 style={{
-                  backgroundImage: bgImage,
+                  backgroundImage: `url('${bgImageSrc}')`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  filter: 'blur(8px) brightness(0.6)'
+                  backgroundRepeat: 'no-repeat'
                 }}
-                className="opacity-40"
               />
-            )}
-          </motion.div>
-        </AnimatePresence>
-        <motion.div aria-hidden className="absolute inset-0" style={{
-          backgroundImage: "radial-gradient(1200px 400px at -10% 110%, rgba(255,255,255,0.14), transparent), radial-gradient(900px 360px at 120% -10%, rgba(255,255,255,0.12), transparent)"
-        }} animate={{ backgroundPosition: ['0% 0%','100% 100%'] }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' }} />
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <div className="absolute inset-0" style={{ background: bgGradient }} />
+        )}
+        {!hasBgImage && (
+          <motion.div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(1200px 400px at -10% 110%, rgba(255,255,255,0.14), transparent), radial-gradient(900px 360px at 120% -10%, rgba(255,255,255,0.12), transparent)"
+            }}
+            animate={{ backgroundPosition: ['0% 0%', '100% 100%'] }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+          />
+        )}
       </div>
 
       <div className="relative min-h-[70vh] lg:min-h-[76vh] flex flex-col text-white pb-24">
@@ -190,6 +183,10 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
             <div className="flex items-end gap-4 flex-wrap justify-center" onMouseLeave={()=>setHoverIndex(null)}>
               {currentCat.projects.map((p,i)=>{
                 const activeCard = i===displayIndex;
+                const baseImage = p.cover || p.tile;
+                const placeholder = PH(p.title, 640, 853);
+                const imageSrc = baseImage || placeholder;
+                const fetchPriority = activeCard && baseImage ? 'high' : 'auto';
                 return (
                   <motion.div key={p.id} onMouseEnter={()=>setHoverIndex(i)}
                     className={`relative shrink-0 rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden ${activeCard ? 'ring-2 ring-white/50' : 'hover:border-white/30'}`}
@@ -197,11 +194,28 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
                     initial={{opacity:0, y:16, scale: INACTIVE_CARD_SCALE}}
                     animate={{opacity:1, y:0, scale: activeCard ? ACTIVE_CARD_SCALE : INACTIVE_CARD_SCALE}}
                     transition={{delay: i*0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1]}}>
-                    <img src={p.tile || p.cover} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <img
+                      src={imageSrc}
+                      alt={p.title}
+                      loading={activeCard ? 'eager' : 'lazy'}
+                      fetchPriority={fetchPriority}
+                      decoding={activeCard ? 'auto' : 'async'}
+                      data-fallback={baseImage ? 'false' : 'true'}
+                      onError={(event) => {
+                        if (event.currentTarget.dataset.fallback === 'true') return;
+                        event.currentTarget.dataset.fallback = 'true';
+                        event.currentTarget.src = placeholder;
+                      }}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <p className="text-sm font-semibold line-clamp-1">{p.title}</p>
-                      <p className="text-[11px] text-white/70 line-clamp-1">{p.subtitle}</p>
+                      <div className="rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md shadow-lg overflow-hidden">
+                        <div className="px-4 py-2">
+                          <p className="text-sm font-semibold line-clamp-1">{p.title}</p>
+                          <p className="text-[11px] text-white/70 line-clamp-1">{p.subtitle}</p>
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 );

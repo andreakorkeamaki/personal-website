@@ -1,21 +1,49 @@
 "use client";
 import { Canvas } from '@react-three/fiber';
 import GalaxyPoints from './GalaxyPoints';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
 export default function Hero() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(true);
+
+  useEffect(() => {
+    const target = sectionRef.current;
+    if (!target) return;
+
+    const handleVisibility = () => {
+      const rect = target.getBoundingClientRect();
+      const viewHeight = window.innerHeight || document.documentElement.clientHeight;
+      const fullyOffscreen = rect.bottom <= viewHeight * 0.05 || rect.top >= viewHeight * 0.95;
+      const mostlyVisible = rect.top < viewHeight * 0.85 && rect.bottom > viewHeight * 0.15;
+      setInView(!fullyOffscreen && mostlyVisible);
+    };
+
+    handleVisibility();
+
+    window.addEventListener('scroll', handleVisibility, { passive: true });
+    window.addEventListener('resize', handleVisibility);
+
+    return () => {
+      window.removeEventListener('scroll', handleVisibility);
+      window.removeEventListener('resize', handleVisibility);
+    };
+  }, []);
+
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-[#0F0E0E]">
+    <section ref={sectionRef} className="relative h-screen w-full overflow-hidden bg-[#0F0E0E]">
       {/* 3D Background */}
       <div className="absolute inset-0">
         <Canvas
           gl={{ powerPreference: 'high-performance', antialias: true, alpha: false }}
           dpr={[1, 2]}
           camera={{ position: [0, 0, 10], fov: 60 }}
-          onCreated={({ gl }) => { gl.setClearColor('#0F0E0E'); }}
+          onCreated={({ gl }) => {
+            gl.setClearColor('#0F0E0E');
+          }}
         >
           <Suspense fallback={null}>
-            <GalaxyPoints />
+            <GalaxyPoints active={inView} />
           </Suspense>
         </Canvas>
       </div>

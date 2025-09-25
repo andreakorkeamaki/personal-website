@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH } from "./shared";
 import { Boxes, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function MobileShowcase({ initialIndex = 0, className, onSelect }: ShowcaseProps) {
@@ -81,18 +81,8 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
     return `linear-gradient(115deg, ${from}, ${to})`;
   }, [activeProject]);
 
-  const bgImage = useMemo(() => {
-    // Use project-specific image as blurred overlay when available
-    if (activeProject?.tile || activeProject?.cover) {
-      return `url('${activeProject.tile || activeProject.cover}')`;
-    }
-    return null;
-  }, [activeProject]);
-
-  const gradientOpacity = useMemo(() => {
-    // Make gradient more transparent when there's an image overlay
-    return bgImage ? '0.7' : '1';
-  }, [bgImage]);
+  const bgImageSrc = activeProject?.tile || activeProject?.cover || null;
+  const hasBgImage = !!bgImageSrc;
 
   const swipeRef = useRef<{ pointerId: number; startX: number; lastX: number; fired: boolean } | null>(null);
 
@@ -166,53 +156,42 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   return (
     <div className={`relative w-full overflow-visible ${className || ""}`} style={{ overscrollBehavior: "contain" }}>
       <div className="absolute inset-0">
-        <div className="absolute inset-0" style={{ background: bgGradient }} />
-        {bgImage && (
-          <div
-            className="absolute inset-0 opacity-40"
-            style={{
-              backgroundImage: bgImage,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              filter: 'blur(8px) brightness(0.6)'
-            }}
-          />
-        )}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`bg-${currentCat.id}-${activeProject?.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0"
-          >
-            <div style={{ background: `linear-gradient(115deg, rgba(30, 165, 233, ${gradientOpacity}), rgba(139, 92, 246, ${gradientOpacity}))` }} />
-            {bgImage && (
+        {hasBgImage ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`bg-${currentCat.id}-${activeProject?.id}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute inset-0"
+            >
               <div
+                className="absolute inset-0"
                 style={{
-                  backgroundImage: bgImage,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  filter: 'blur(8px) brightness(0.6)'
+                  backgroundImage: `url('${bgImageSrc}')`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat"
                 }}
-                className="opacity-40"
               />
-            )}
-          </motion.div>
-        </AnimatePresence>
-        <motion.div
-          aria-hidden
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(1200px 400px at -10% 110%, rgba(255,255,255,0.14), transparent), radial-gradient(900px 360px at 120% -10%, rgba(255,255,255,0.12), transparent)"
-          }}
-          animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-        />
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <>
+            <div className="absolute inset-0" style={{ background: bgGradient }} />
+            <motion.div
+              aria-hidden
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  "radial-gradient(1200px 400px at -10% 110%, rgba(255,255,255,0.14), transparent), radial-gradient(900px 360px at 120% -10%, rgba(255,255,255,0.12), transparent)"
+              }}
+              animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+              transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+            />
+          </>
+        )}
       </div>
 
       <div className="relative min-h-screen flex flex-col text-white pb-16 pt-8">
@@ -317,6 +296,10 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                     const rotate = offset * -6;
                     const opacity = Math.max(0.35, 1 - depth * 0.26);
 
+                    const baseImage = project.cover || project.tile;
+                    const placeholder = PH(project.title, 640, 853);
+                    const imageSrc = baseImage || placeholder;
+                    const fetchPriority = isActive && baseImage ? 'high' : 'auto';
                     return (
                       <motion.div
                         key={project.id}
@@ -335,7 +318,20 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                         style={{ zIndex: 200 - depth * 10 }}
                         onClick={() => setIndex(i)}
                       >
-                        <img src={project.tile || project.cover} alt={project.title} className="absolute inset-0 h-full w-full object-cover" />
+                        <img
+                          src={imageSrc}
+                          alt={project.title}
+                          loading={isActive ? 'eager' : 'lazy'}
+                          fetchPriority={fetchPriority}
+                          decoding={isActive ? 'auto' : 'async'}
+                          data-fallback={baseImage ? 'false' : 'true'}
+                          onError={(event) => {
+                            if (event.currentTarget.dataset.fallback === 'true') return;
+                            event.currentTarget.dataset.fallback = 'true';
+                            event.currentTarget.src = placeholder;
+                          }}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-4">
                           <div className="rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md shadow-lg overflow-hidden">

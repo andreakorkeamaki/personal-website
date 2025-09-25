@@ -57,7 +57,7 @@ export const CATEGORIES: Category[] = [
     label: "Render 3D",
     icon: Boxes,
     projects: [
-      { id: "p1", title: "Exploded Futuristic Device", subtitle: "3D / Product Viz", year: "2025", tags: ["Blender", "Cycles"], tile: "/images/projects/device-bg.webp", palette: { from: "#0072ff", to: "#00c6ff" }, info: [ { title: "Most viewed video", thumb: PH("Video", 640, 360) }, { title: "Combo Meter", thumb: PH("Tech", 640, 360) }, { title: "Ruby Relic", thumb: PH("Asset", 640, 360) } ] },
+      { id: "p1", title: "Exploded Futuristic Device", subtitle: "3D / Product Viz", year: "2025", tags: ["Blender", "Cycles"], tile: "/images/projects/device-bg.webp", cover: "/images/projects/device-cover.webp", palette: { from: "#0072ff", to: "#00c6ff" }, info: [ { title: "Most viewed video", thumb: PH("Video", 640, 360) }, { title: "Combo Meter", thumb: PH("Tech", 640, 360) }, { title: "Ruby Relic", thumb: PH("Asset", 640, 360) } ] },
       { id: "p2", title: "Shoe Reel – GP5", subtitle: "Stylized motion", year: "2024", tags: ["3D", "AE"], tile: "/images/projects/gp5-bg.webp", palette: { from: "#00b4d8", to: "#0077b6" }, info: [ { title: "Shots selection", thumb: PH("Shots", 640, 360) }, { title: "Lookdev", thumb: PH("Lookdev", 640, 360) } ] },
       { id: "p3", title: "Product Series", subtitle: "High-contrast look", year: "2023", tags: ["Light", "Retouch"], tile: "/images/projects/product-bg.webp", palette: { from: "#2193b0", to: "#6dd5ed" }, info: [ { title: "Retouch", thumb: PH("Edit", 640, 360) }, { title: "Studio setup", thumb: PH("Setup", 640, 360) } ] },
       { id: "p3b", title: "Exploded Anim – V2", subtitle: "Hard‑surface test", year: "2025", tags: ["Blender", "GeoNodes"], tile: "/images/projects/explode-v2-bg.webp", palette: { from: "#38bdf8", to: "#818cf8" }, info: [ { title: "Breakdown", thumb: PH("BD", 640, 360) } ] },
@@ -68,9 +68,9 @@ export const CATEGORIES: Category[] = [
     label: "Progetti Web",
     icon: Globe,
     projects: [
-      { id: "p4", title: "Fractals Viewer", subtitle: "Interactive shaders", year: "2025", tags: ["Next.js", "WebGL"], tile: "/images/projects/fractals-bg.webp", palette: { from: "#1fa2ff", to: "#12d8fa" }, info: [ { title: "Live demo", thumb: PH("Demo", 640, 360) }, { title: "Tech stack", thumb: PH("Stack", 640, 360) } ] },
+      { id: "p4", title: "Fractals Viewer", subtitle: "Interactive shaders", year: "2025", tags: ["Next.js", "WebGL"], tile: "/images/projects/fractals-bg.webp", cover: "/images/projects/fractals-cover.webp", palette: { from: "#1fa2ff", to: "#12d8fa" }, info: [ { title: "Live demo", thumb: PH("Demo", 640, 360) }, { title: "Tech stack", thumb: PH("Stack", 640, 360) } ] },
       { id: "p5", title: "Gong & Motion", subtitle: "Sito + booking idea", year: "2025", tags: ["Windsurf", "Tailwind"], tile: "/images/projects/gm-bg.webp", palette: { from: "#ff9966", to: "#ff5e62" }, info: [ { title: "Wireframe", thumb: PH("UX", 640, 360) }, { title: "Hero concept", thumb: PH("Hero", 640, 360) } ] },
-      { id: "p5b", title: "Portfolio Template", subtitle: "Interactive 3D hero", year: "2025", tags: ["Next.js", "Three.js"], tile: "/images/projects/template-bg.webp", palette: { from: "#667db6", to: "#0082c8" }, info: [ { title: "Preview", thumb: PH("Prev", 640, 360) } ] },
+      { id: "p5b", title: "Portfolio Template", subtitle: "Interactive 3D hero", year: "2025", tags: ["Next.js", "Three.js"], tile: "/images/projects/template-bg.webp", cover: "/images/projects/template-cover.webp", palette: { from: "#667db6", to: "#0082c8" }, info: [ { title: "Preview", thumb: PH("Prev", 640, 360) } ] },
     ],
   },
   {
@@ -120,7 +120,13 @@ export function InfoCard({ title, thumb, subtitle }: { title: string; thumb?: st
   return (
     <div className="rounded-xl overflow-hidden border border-white/10 bg-black/25 backdrop-blur">
       <div className="aspect-[16/10] relative">
-        <img src={thumb || PH("Info", 640, 360)} alt={title} className="absolute inset-0 w-full h-full object-cover" />
+        <img
+          src={thumb || PH("Info", 640, 360)}
+          alt={title}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
       </div>
       <div className="p-3">
         <p className="text-sm font-medium line-clamp-1">{title}</p>

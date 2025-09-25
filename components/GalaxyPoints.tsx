@@ -5,6 +5,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 
 type GalaxyPointsProps = {
   count?: number;
+  active?: boolean;
 };
 
 // Utility to convert hex to THREE.Color
@@ -14,12 +15,17 @@ const C1 = hex('#4DA8DA'); // azzurro
 const C2 = hex('#52357B'); // viola
 const C3 = hex('#468A9A'); // teal
 
-export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
+export default function GalaxyPoints({ count = 12000, active = true }: GalaxyPointsProps) {
   const pointsRef = useRef<THREE.Points | null>(null);
   const { size, gl } = useThree();
 
   const isMobile = size.width < 768;
   const finalCount = Math.floor(isMobile ? count * 0.45 : count);
+  const activeRef = useRef(active);
+
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
 
   // Color palettes for each shape using existing colors
   const colorPalettes = useMemo(() => {
@@ -230,6 +236,9 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
   };
 
   useFrame(({ clock, mouse, viewport }) => {
+    if (!activeRef.current) {
+      return;
+    }
     const t = clock.getElapsedTime();
     lastTimeRef.current = t;
     const pts = pointsRef.current;
