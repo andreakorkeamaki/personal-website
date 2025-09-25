@@ -1,8 +1,49 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps, PH } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages } from "./shared";
 import { Boxes, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+
+const MOBILE_CARD_IMAGE_SIZE_HINT = "280px";
+
+type ShowcaseCardImageProps = {
+  src?: string | null;
+  placeholder: string;
+  alt: string;
+  priority: boolean;
+  loading: "eager" | "lazy";
+};
+
+function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: ShowcaseCardImageProps) {
+  const [resolvedSrc, setResolvedSrc] = useState(src || placeholder);
+
+  useEffect(() => {
+    setResolvedSrc(src || placeholder);
+  }, [src, placeholder]);
+
+  const isPriority = priority && !!src && src !== placeholder;
+  const loadingMode = isPriority ? undefined : loading;
+
+  return (
+    <Image
+      src={resolvedSrc}
+      alt={alt}
+      fill
+      sizes={MOBILE_CARD_IMAGE_SIZE_HINT}
+      priority={isPriority}
+      loading={loadingMode}
+      placeholder="blur"
+      blurDataURL={placeholder}
+      onError={() => {
+        if (resolvedSrc !== placeholder) {
+          setResolvedSrc(placeholder);
+        }
+      }}
+      className="object-cover transition-opacity duration-300"
+    />
+  );
+}
 
 export default function MobileShowcase({ initialIndex = 0, className, onSelect }: ShowcaseProps) {
   const flattened = useMemo(() => {
@@ -20,6 +61,10 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   const boundedInitialIndex = hasProjects ? Math.min(Math.max(0, initialIndex), safeLen - 1) : 0;
   const [index, setIndex] = useState(boundedInitialIndex);
   const [categoryOpen, setCategoryOpen] = useState(false);
+
+  useEffect(() => {
+    prefetchProjectImages(flattened.map((entry) => entry.project));
+  }, [flattened]);
 
   useEffect(() => {
     if (!hasProjects) {
@@ -156,8 +201,9 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   return (
     <div className={`relative w-full overflow-visible ${className || ""}`} style={{ overscrollBehavior: "contain" }}>
       <div className="absolute inset-0">
-        {hasBgImage ? (
-          <AnimatePresence mode="wait">
+        <div className="absolute inset-0" style={{ background: bgGradient }} />
+        <AnimatePresence mode="wait">
+          {hasBgImage && (
             <motion.div
               key={`bg-${currentCat.id}-${activeProject?.id}`}
               initial={{ opacity: 0 }}
@@ -176,21 +222,19 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                 }}
               />
             </motion.div>
-          </AnimatePresence>
-        ) : (
-          <>
-            <div className="absolute inset-0" style={{ background: bgGradient }} />
-            <motion.div
-              aria-hidden
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  "radial-gradient(1200px 400px at -10% 110%, rgba(255,255,255,0.14), transparent), radial-gradient(900px 360px at 120% -10%, rgba(255,255,255,0.12), transparent)"
-              }}
-              animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
-              transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-            />
-          </>
+          )}
+        </AnimatePresence>
+        {!hasBgImage && (
+          <motion.div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "radial-gradient(1200px 400px at -10% 110%, rgba(255,255,255,0.14), transparent), radial-gradient(900px 360px at 120% -10%, rgba(255,255,255,0.12), transparent)"
+            }}
+            animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+            transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+          />
         )}
       </div>
 
@@ -298,8 +342,6 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
 
                     const baseImage = project.cover || project.tile;
                     const placeholder = PH(project.title, 640, 853);
-                    const imageSrc = baseImage || placeholder;
-                    const fetchPriority = isActive && baseImage ? 'high' : 'auto';
                     return (
                       <motion.div
                         key={project.id}
@@ -318,19 +360,12 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                         style={{ zIndex: 200 - depth * 10 }}
                         onClick={() => setIndex(i)}
                       >
-                        <img
-                          src={imageSrc}
+                        <ShowcaseCardImage
+                          src={baseImage}
+                          placeholder={placeholder}
                           alt={project.title}
+                          priority={isActive && !!baseImage}
                           loading={isActive ? 'eager' : 'lazy'}
-                          fetchPriority={fetchPriority}
-                          decoding={isActive ? 'auto' : 'async'}
-                          data-fallback={baseImage ? 'false' : 'true'}
-                          onError={(event) => {
-                            if (event.currentTarget.dataset.fallback === 'true') return;
-                            event.currentTarget.dataset.fallback = 'true';
-                            event.currentTarget.src = placeholder;
-                          }}
-                          className="absolute inset-0 h-full w-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-4">

@@ -1,13 +1,53 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps, PH } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages } from "./shared";
 import { Boxes } from "lucide-react";
 
 const CARD_WIDTH = 230;
 const CARD_HEIGHT = 260;
 const ACTIVE_CARD_SCALE = 1.13;
 const INACTIVE_CARD_SCALE = 0.87;
+const CARD_IMAGE_SIZE_HINT = `${Math.round(CARD_WIDTH * ACTIVE_CARD_SCALE)}px`;
+
+type ShowcaseCardImageProps = {
+  src?: string | null;
+  placeholder: string;
+  alt: string;
+  priority: boolean;
+  loading: "eager" | "lazy";
+};
+
+function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: ShowcaseCardImageProps) {
+  const [resolvedSrc, setResolvedSrc] = useState(src || placeholder);
+
+  useEffect(() => {
+    setResolvedSrc(src || placeholder);
+  }, [src, placeholder]);
+
+  const isPriority = priority && !!src && src !== placeholder;
+  const loadingMode = isPriority ? undefined : loading;
+
+  return (
+    <Image
+      src={resolvedSrc}
+      alt={alt}
+      fill
+      sizes={CARD_IMAGE_SIZE_HINT}
+      priority={isPriority}
+      loading={loadingMode}
+      placeholder="blur"
+      blurDataURL={placeholder}
+      onError={() => {
+        if (resolvedSrc !== placeholder) {
+          setResolvedSrc(placeholder);
+        }
+      }}
+      className="object-cover transition-opacity duration-300"
+    />
+  );
+}
 
 export default function DesktopShowcase({ initialIndex = 0, onOpen, className }: ShowcaseProps) {
   const [catIndex, setCatIndex] = useState(0);
@@ -23,6 +63,10 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
   const nextIndexRef = useRef<number | null>(null);
   const prevCatRef = useRef(catIndex);
   const [sectionActive, setSectionActive] = useState(false);
+
+  useEffect(() => {
+    prefetchProjectImages(currentCat.projects);
+  }, [currentCat]);
 
   useEffect(() => {
     const catChanged = prevCatRef.current !== catIndex;
@@ -126,8 +170,9 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
     <div ref={rootRef} className={`relative w-full overflow-visible ${className || ''}`}
       onMouseEnter={()=>setSectionActive(true)} onMouseLeave={()=>setSectionActive(false)} onFocusCapture={()=>setSectionActive(true)} onBlurCapture={()=>setSectionActive(false)}>
       <div className="absolute inset-0">
-        {hasBgImage ? (
-          <AnimatePresence mode="wait">
+        <div className="absolute inset-0" style={{ background: bgGradient }} />
+        <AnimatePresence mode="wait">
+          {hasBgImage && (
             <motion.div
               key={`bg-${currentCat.id}-${active?.id}`}
               initial={{ opacity: 0 }}
@@ -146,10 +191,8 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
                 }}
               />
             </motion.div>
-          </AnimatePresence>
-        ) : (
-          <div className="absolute inset-0" style={{ background: bgGradient }} />
-        )}
+          )}
+        </AnimatePresence>
         {!hasBgImage && (
           <motion.div
             aria-hidden
@@ -185,8 +228,6 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
                 const activeCard = i===displayIndex;
                 const baseImage = p.cover || p.tile;
                 const placeholder = PH(p.title, 640, 853);
-                const imageSrc = baseImage || placeholder;
-                const fetchPriority = activeCard && baseImage ? 'high' : 'auto';
                 return (
                   <motion.div key={p.id} onMouseEnter={()=>setHoverIndex(i)}
                     className={`relative shrink-0 rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden ${activeCard ? 'ring-2 ring-white/50' : 'hover:border-white/30'}`}
@@ -194,19 +235,12 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
                     initial={{opacity:0, y:16, scale: INACTIVE_CARD_SCALE}}
                     animate={{opacity:1, y:0, scale: activeCard ? ACTIVE_CARD_SCALE : INACTIVE_CARD_SCALE}}
                     transition={{delay: i*0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1]}}>
-                    <img
-                      src={imageSrc}
+                    <ShowcaseCardImage
+                      src={baseImage}
+                      placeholder={placeholder}
                       alt={p.title}
+                      priority={activeCard && !!baseImage}
                       loading={activeCard ? 'eager' : 'lazy'}
-                      fetchPriority={fetchPriority}
-                      decoding={activeCard ? 'auto' : 'async'}
-                      data-fallback={baseImage ? 'false' : 'true'}
-                      onError={(event) => {
-                        if (event.currentTarget.dataset.fallback === 'true') return;
-                        event.currentTarget.dataset.fallback = 'true';
-                        event.currentTarget.src = placeholder;
-                      }}
-                      className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">

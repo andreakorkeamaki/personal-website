@@ -45,6 +45,19 @@ export const PH = (label: string, w = 800, h = 800) =>
   </svg>`)}
 `;
 
+const preloadedProjectImages = new Set<string>();
+
+export function prefetchProjectImages(projects: Project[]) {
+  if (typeof window === 'undefined') return;
+  projects.forEach((project) => {
+    const src = project.tile || project.cover;
+    if (!src || preloadedProjectImages.has(src)) return;
+    const img = new Image();
+    img.src = src;
+    preloadedProjectImages.add(src);
+  });
+}
+
 // Demo data (same as before)
 import { Globe, Sparkles, Bot, Palette } from "lucide-react";
 export const CATEGORIES: Category[] = [
