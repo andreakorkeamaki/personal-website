@@ -58,6 +58,21 @@ export function prefetchProjectImages(projects: Project[]) {
   });
 }
 
+let allImagesPrefetched = false;
+
+export function prefetchAllProjectImages() {
+  if (typeof window === 'undefined' || allImagesPrefetched) return;
+  allImagesPrefetched = true;
+  const hydrate = () => {
+    prefetchProjectImages(CATEGORIES.flatMap((category) => category.projects));
+  };
+  if (typeof (window as any).requestIdleCallback === 'function') {
+    (window as any).requestIdleCallback(hydrate, { timeout: 2000 });
+  } else {
+    window.setTimeout(hydrate, 0);
+  }
+}
+
 // Demo data (same as before)
 import { Globe, Sparkles, Bot, Palette } from "lucide-react";
 export const CATEGORIES: Category[] = [

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages } from "./shared";
 import { Boxes } from "lucide-react";
 
 const CARD_WIDTH = 230;
@@ -67,6 +67,10 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
   useEffect(() => {
     prefetchProjectImages(currentCat.projects);
   }, [currentCat]);
+
+  useEffect(() => {
+    prefetchAllProjectImages();
+  }, []);
 
   useEffect(() => {
     const catChanged = prevCatRef.current !== catIndex;

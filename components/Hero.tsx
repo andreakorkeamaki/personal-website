@@ -10,23 +10,59 @@ export default function Hero() {
   useEffect(() => {
     const target = sectionRef.current;
     if (!target) return;
-
-    const handleVisibility = () => {
-      const rect = target.getBoundingClientRect();
-      const viewHeight = window.innerHeight || document.documentElement.clientHeight;
-      const fullyOffscreen = rect.bottom <= viewHeight * 0.05 || rect.top >= viewHeight * 0.95;
-      const mostlyVisible = rect.top < viewHeight * 0.85 && rect.bottom > viewHeight * 0.15;
-      setInView(!fullyOffscreen && mostlyVisible);
+    const visibilityState = {
+      intersection: true,
+      page: typeof document === 'undefined' ? true : !document.hidden,
     };
 
-    handleVisibility();
+    const updateActive = () => {
+      setInView(visibilityState.intersection && visibilityState.page);
+    };
 
-    window.addEventListener('scroll', handleVisibility, { passive: true });
-    window.addEventListener('resize', handleVisibility);
+    let fallbackHandler: (() => void) | null = null;
+    let observer: IntersectionObserver | null = null;
+
+    if (typeof window !== 'undefined' && 'IntersectionObserver' in window) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries.find((item) => item.target === target);
+          if (entry) {
+            visibilityState.intersection = entry.isIntersecting && entry.intersectionRatio > 0.15;
+            updateActive();
+          }
+        },
+        { threshold: [0, 0.15, 0.35, 0.6, 0.85, 1] }
+      );
+      observer.observe(target);
+    } else {
+      fallbackHandler = () => {
+        const rect = target.getBoundingClientRect();
+        const viewHeight = window.innerHeight || document.documentElement.clientHeight;
+        const fullyOffscreen = rect.bottom <= viewHeight * 0.05 || rect.top >= viewHeight * 0.95;
+        const mostlyVisible = rect.top < viewHeight * 0.85 && rect.bottom > viewHeight * 0.15;
+        visibilityState.intersection = !fullyOffscreen && mostlyVisible;
+        updateActive();
+      };
+      fallbackHandler();
+      window.addEventListener('scroll', fallbackHandler, { passive: true });
+      window.addEventListener('resize', fallbackHandler);
+    }
+
+    const handlePageVisibility = () => {
+      visibilityState.page = !document.hidden;
+      updateActive();
+    };
+
+    document.addEventListener('visibilitychange', handlePageVisibility);
+    updateActive();
 
     return () => {
-      window.removeEventListener('scroll', handleVisibility);
-      window.removeEventListener('resize', handleVisibility);
+      observer?.disconnect();
+      if (fallbackHandler) {
+        window.removeEventListener('scroll', fallbackHandler);
+        window.removeEventListener('resize', fallbackHandler);
+      }
+      document.removeEventListener('visibilitychange', handlePageVisibility);
     };
   }, []);
 
@@ -36,7 +72,8 @@ export default function Hero() {
       <div className="absolute inset-0">
         <Canvas
           gl={{ powerPreference: 'high-performance', antialias: true, alpha: false }}
-          dpr={[1, 2]}
+          dpr={inView ? [1, 2] : 1}
+          frameloop={inView ? 'always' : 'demand'}
           camera={{ position: [0, 0, 10], fov: 60 }}
           onCreated={({ gl }) => {
             gl.setClearColor('#0F0E0E');

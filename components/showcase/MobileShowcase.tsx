@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages } from "./shared";
 import { Boxes, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 const MOBILE_CARD_IMAGE_SIZE_HINT = "280px";
@@ -65,6 +65,10 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   useEffect(() => {
     prefetchProjectImages(flattened.map((entry) => entry.project));
   }, [flattened]);
+
+  useEffect(() => {
+    prefetchAllProjectImages();
+  }, []);
 
   useEffect(() => {
     if (!hasProjects) {
