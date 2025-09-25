@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, hasPrefetchedProjectImage } from "./shared";
 import { Boxes } from "lucide-react";
 
 const CARD_WIDTH = 230;
@@ -28,6 +28,8 @@ function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: Showcas
 
   const isPriority = priority && !!src && src !== placeholder;
   const loadingMode = isPriority ? undefined : loading;
+  const prefetched = hasPrefetchedProjectImage(src);
+  const placeholderStrategy = prefetched ? "empty" : "blur";
 
   return (
     <Image
@@ -37,14 +39,15 @@ function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: Showcas
       sizes={CARD_IMAGE_SIZE_HINT}
       priority={isPriority}
       loading={loadingMode}
-      placeholder="blur"
-      blurDataURL={placeholder}
+      placeholder={placeholderStrategy}
+      blurDataURL={placeholderStrategy === "blur" ? placeholder : undefined}
       onError={() => {
         if (resolvedSrc !== placeholder) {
           setResolvedSrc(placeholder);
         }
       }}
-      className="object-cover transition-opacity duration-300"
+      className="object-cover"
+      unoptimized
     />
   );
 }

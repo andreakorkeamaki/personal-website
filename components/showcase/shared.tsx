@@ -60,6 +60,11 @@ export function prefetchProjectImages(projects: Project[]) {
 
 let allImagesPrefetched = false;
 
+export function hasPrefetchedProjectImage(src?: string | null) {
+  if (!src) return false;
+  return preloadedProjectImages.has(src);
+}
+
 export function prefetchAllProjectImages() {
   if (typeof window === 'undefined' || allImagesPrefetched) return;
   allImagesPrefetched = true;
