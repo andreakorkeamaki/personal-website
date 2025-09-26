@@ -108,14 +108,8 @@ export function getPrefetchVersion() {
 export function prefetchAllProjectImages() {
   if (typeof window === 'undefined' || allImagesPrefetched) return;
   allImagesPrefetched = true;
-  const hydrate = () => {
-    prefetchProjectImages(CATEGORIES.flatMap((category) => category.projects));
-  };
-  if (typeof (window as any).requestIdleCallback === 'function') {
-    (window as any).requestIdleCallback(hydrate, { timeout: 2000 });
-  } else {
-    window.setTimeout(hydrate, 0);
-  }
+  // Start prefetching immediately on mount for instant switching.
+  prefetchProjectImages(CATEGORIES.flatMap((category) => category.projects));
 }
 
 // Demo data (same as before)

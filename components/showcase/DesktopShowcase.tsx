@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, hasPrefetchedProjectImage, subscribeToPrefetchedImages, getPrefetchVersion } from "./shared";
+import { motion } from "framer-motion";
+import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages } from "./shared";
 import { Boxes } from "lucide-react";
 
 const CARD_WIDTH = 230;
@@ -26,22 +26,15 @@ function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: Showcas
     setResolvedSrc(src || placeholder);
   }, [src, placeholder]);
 
-  const isPriority = priority && !!src && src !== placeholder;
-  const prefetchVersion = useSyncExternalStore(subscribeToPrefetchedImages, getPrefetchVersion, getPrefetchVersion);
-  const prefetched = prefetchVersion > 0 && hasPrefetchedProjectImage(src);
-  const loadingMode = prefetched ? 'eager' : isPriority ? undefined : loading;
-  const placeholderStrategy = prefetched ? "empty" : "blur";
-
   return (
     <Image
       src={resolvedSrc}
       alt={alt}
       fill
       sizes={CARD_IMAGE_SIZE_HINT}
-      priority={isPriority}
-      loading={loadingMode}
-      placeholder={placeholderStrategy}
-      blurDataURL={placeholderStrategy === "blur" ? placeholder : undefined}
+      priority={priority}
+      loading={loading}
+      placeholder="empty"
       onError={() => {
         if (resolvedSrc !== placeholder) {
           setResolvedSrc(placeholder);
@@ -173,40 +166,28 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
 
   const bgImageSrc = active?.tile || active?.cover || null;
   const hasBgImage = !!bgImageSrc;
-  const bgPrefetchVersion = useSyncExternalStore(subscribeToPrefetchedImages, getPrefetchVersion, getPrefetchVersion);
-  const bgPrefetched = bgPrefetchVersion > 0 && hasPrefetchedProjectImage(bgImageSrc);
-  const bgPlaceholder = useMemo(() => (active ? PH(active.title, 1920, 1080) : undefined), [active]);
 
   return (
     <div ref={rootRef} className={`relative w-full overflow-visible ${className || ''}`}
       onMouseEnter={()=>setSectionActive(true)} onMouseLeave={()=>setSectionActive(false)} onFocusCapture={()=>setSectionActive(true)} onBlurCapture={()=>setSectionActive(false)}>
       <div className="absolute inset-0">
         <div className="absolute inset-0" style={{ background: bgGradient }} />
-        <AnimatePresence mode="wait">
-          {hasBgImage && (
-            <motion.div
-              key={`bg-${currentCat.id}-${active?.id}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-0"
-            >
-              <Image
-                src={bgImageSrc}
-                alt={active?.title ? `${active.title} background` : 'Project background'}
-                fill
-                sizes="100vw"
-                className="object-cover"
-                loading={bgPrefetched ? 'eager' : 'lazy'}
-                placeholder={bgPrefetched ? 'empty' : 'blur'}
-                blurDataURL={!bgPrefetched ? bgPlaceholder : undefined}
-                unoptimized
-                aria-hidden={true}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {hasBgImage && (
+          <div className="absolute inset-0">
+            <Image
+              src={bgImageSrc}
+              alt={active?.title ? `${active.title} background` : 'Project background'}
+              fill
+              sizes="100vw"
+              className="object-cover"
+              loading="eager"
+              priority
+              placeholder="empty"
+              unoptimized
+              aria-hidden={true}
+            />
+          </div>
+        )}
         {!hasBgImage && (
           <motion.div
             aria-hidden
