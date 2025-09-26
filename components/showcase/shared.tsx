@@ -46,15 +46,44 @@ export const PH = (label: string, w = 800, h = 800) =>
 `;
 
 const preloadedProjectImages = new Set<string>();
+const preloadingProjectImages = new Set<string>();
+const prefetchListeners = new Set<() => void>();
+let prefetchVersion = 0;
+
+function notifyPrefetchListeners() {
+  prefetchVersion += 1;
+  prefetchListeners.forEach((listener) => listener());
+}
+
+function queuePrefetch(src?: string | null) {
+  if (!src || preloadedProjectImages.has(src) || preloadingProjectImages.has(src)) return;
+  preloadingProjectImages.add(src);
+  const img = new Image();
+  img.loading = 'eager';
+  img.decoding = 'async';
+  const finish = () => {
+    preloadingProjectImages.delete(src);
+    preloadedProjectImages.add(src);
+    notifyPrefetchListeners();
+  };
+  img.onload = () => {
+    if (typeof img.decode === 'function') {
+      img.decode().catch(() => undefined).finally(finish);
+    } else {
+      finish();
+    }
+  };
+  img.onerror = () => {
+    preloadingProjectImages.delete(src);
+  };
+  img.src = src;
+}
 
 export function prefetchProjectImages(projects: Project[]) {
   if (typeof window === 'undefined') return;
   projects.forEach((project) => {
-    const src = project.tile || project.cover;
-    if (!src || preloadedProjectImages.has(src)) return;
-    const img = new Image();
-    img.src = src;
-    preloadedProjectImages.add(src);
+    queuePrefetch(project.tile);
+    queuePrefetch(project.cover);
   });
 }
 
@@ -63,6 +92,17 @@ let allImagesPrefetched = false;
 export function hasPrefetchedProjectImage(src?: string | null) {
   if (!src) return false;
   return preloadedProjectImages.has(src);
+}
+
+export function subscribeToPrefetchedImages(listener: () => void) {
+  prefetchListeners.add(listener);
+  return () => {
+    prefetchListeners.delete(listener);
+  };
+}
+
+export function getPrefetchVersion() {
+  return prefetchVersion;
 }
 
 export function prefetchAllProjectImages() {

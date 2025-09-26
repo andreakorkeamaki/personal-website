@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, hasPrefetchedProjectImage } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, hasPrefetchedProjectImage, subscribeToPrefetchedImages, getPrefetchVersion } from "./shared";
 import { Boxes } from "lucide-react";
 
 const CARD_WIDTH = 230;
@@ -27,8 +27,9 @@ function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: Showcas
   }, [src, placeholder]);
 
   const isPriority = priority && !!src && src !== placeholder;
-  const loadingMode = isPriority ? undefined : loading;
-  const prefetched = hasPrefetchedProjectImage(src);
+  const prefetchVersion = useSyncExternalStore(subscribeToPrefetchedImages, getPrefetchVersion, getPrefetchVersion);
+  const prefetched = prefetchVersion > 0 && hasPrefetchedProjectImage(src);
+  const loadingMode = prefetched ? 'eager' : isPriority ? undefined : loading;
   const placeholderStrategy = prefetched ? "empty" : "blur";
 
   return (
@@ -172,6 +173,9 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
 
   const bgImageSrc = active?.tile || active?.cover || null;
   const hasBgImage = !!bgImageSrc;
+  const bgPrefetchVersion = useSyncExternalStore(subscribeToPrefetchedImages, getPrefetchVersion, getPrefetchVersion);
+  const bgPrefetched = bgPrefetchVersion > 0 && hasPrefetchedProjectImage(bgImageSrc);
+  const bgPlaceholder = useMemo(() => (active ? PH(active.title, 1920, 1080) : undefined), [active]);
 
   return (
     <div ref={rootRef} className={`relative w-full overflow-visible ${className || ''}`}
@@ -188,14 +192,17 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="absolute inset-0"
             >
-              <div
-                className="absolute inset-0"
-                style={{
-                  backgroundImage: `url('${bgImageSrc}')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
-                }}
+              <Image
+                src={bgImageSrc}
+                alt={active?.title ? `${active.title} background` : 'Project background'}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                loading={bgPrefetched ? 'eager' : 'lazy'}
+                placeholder={bgPrefetched ? 'empty' : 'blur'}
+                blurDataURL={!bgPrefetched ? bgPlaceholder : undefined}
+                unoptimized
+                aria-hidden={true}
               />
             </motion.div>
           )}
