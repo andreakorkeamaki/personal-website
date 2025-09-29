@@ -224,12 +224,26 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
                 const baseImage = p.cover || p.tile;
                 const placeholder = PH(p.title, 640, 853);
                 return (
-                  <motion.div key={p.id} onMouseEnter={()=>setHoverIndex(i)}
-                    className={`relative shrink-0 rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden ${activeCard ? 'ring-2 ring-white/50' : 'hover:border-white/30'}`}
+                  <motion.button
+                    key={p.id}
+                    type="button"
+                    onMouseEnter={() => setHoverIndex(i)}
+                    onClick={() => {
+                      setHoverIndex(null);
+                      setIndex(i);
+                      if (onOpen) {
+                        onOpen(p);
+                      } else if (p.href) {
+                        window.open(p.href, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                    className={`relative shrink-0 rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden ${activeCard ? 'ring-2 ring-white/50' : 'hover:border-white/30'} cursor-pointer`}
                     style={{ width: CARD_WIDTH, height: CARD_HEIGHT, transformOrigin: 'bottom center' }}
                     initial={{opacity:0, y:16, scale: INACTIVE_CARD_SCALE}}
                     animate={{opacity:1, y:0, scale: activeCard ? ACTIVE_CARD_SCALE : INACTIVE_CARD_SCALE}}
-                    transition={{delay: i*0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1]}}>
+                    transition={{delay: i*0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1]}}
+                    aria-label={`Apri ${p.title}`}
+                  >
                     <ShowcaseCardImage
                       src={baseImage}
                       placeholder={placeholder}
@@ -246,7 +260,8 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </motion.button>
+
                 );
               })}
             </div>

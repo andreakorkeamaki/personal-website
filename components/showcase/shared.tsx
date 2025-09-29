@@ -7,13 +7,10 @@ export type Project = {
   id: string;
   title: string;
   subtitle?: string;
-  year?: string | number;
-  tags?: string[];
   tile?: string;
   cover?: string;
   href?: string;
   palette?: { from: string; to: string };
-  info?: { title: string; thumb?: string }[];
 };
 
 export type Category = {
@@ -59,16 +56,19 @@ function queuePrefetch(src?: string | null) {
   if (!src || preloadedProjectImages.has(src) || preloadingProjectImages.has(src)) return;
   preloadingProjectImages.add(src);
   const img = new Image();
-  img.loading = 'eager';
-  img.decoding = 'async';
+  img.loading = "eager";
+  img.decoding = "async";
   const finish = () => {
     preloadingProjectImages.delete(src);
     preloadedProjectImages.add(src);
     notifyPrefetchListeners();
   };
   img.onload = () => {
-    if (typeof img.decode === 'function') {
-      img.decode().catch(() => undefined).finally(finish);
+    if (typeof img.decode === "function") {
+      img
+        .decode()
+        .catch(() => undefined)
+        .finally(finish);
     } else {
       finish();
     }
@@ -80,7 +80,7 @@ function queuePrefetch(src?: string | null) {
 }
 
 export function prefetchProjectImages(projects: Project[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   projects.forEach((project) => {
     queuePrefetch(project.tile);
     queuePrefetch(project.cover);
@@ -106,7 +106,7 @@ export function getPrefetchVersion() {
 }
 
 export function prefetchAllProjectImages() {
-  if (typeof window === 'undefined' || allImagesPrefetched) return;
+  if (typeof window === "undefined" || allImagesPrefetched) return;
   allImagesPrefetched = true;
   // Start prefetching immediately on mount for instant switching.
   prefetchProjectImages(CATEGORIES.flatMap((category) => category.projects));
@@ -124,10 +124,35 @@ export const CATEGORIES: Category[] = [
     label: "Render 3D",
     icon: Boxes,
     projects: [
-      { id: "p1", title: "Exploded Futuristic Device", subtitle: "3D / Product Viz", year: "2025", tags: ["Blender", "Cycles"], tile: "/images/projects/device-bg.webp", cover: "/images/projects/device-cover.webp", palette: { from: "#0072ff", to: "#00c6ff" }, info: [ { title: "Most viewed video", thumb: PH("Video", 640, 360) }, { title: "Combo Meter", thumb: PH("Tech", 640, 360) }, { title: "Ruby Relic", thumb: PH("Asset", 640, 360) } ] },
-      { id: "p2", title: "Shoe Reel – GP5", subtitle: "Stylized motion", year: "2024", tags: ["3D", "AE"], tile: "/images/projects/gp5-bg.webp", palette: { from: "#00b4d8", to: "#0077b6" }, info: [ { title: "Shots selection", thumb: PH("Shots", 640, 360) }, { title: "Lookdev", thumb: PH("Lookdev", 640, 360) } ] },
-      { id: "p3", title: "Product Series", subtitle: "High-contrast look", year: "2023", tags: ["Light", "Retouch"], tile: "/images/projects/product-bg.webp", palette: { from: "#2193b0", to: "#6dd5ed" }, info: [ { title: "Retouch", thumb: PH("Edit", 640, 360) }, { title: "Studio setup", thumb: PH("Setup", 640, 360) } ] },
-      { id: "p3b", title: "Exploded Anim – V2", subtitle: "Hard‑surface test", year: "2025", tags: ["Blender", "GeoNodes"], tile: "/images/projects/explode-v2-bg.webp", palette: { from: "#38bdf8", to: "#818cf8" }, info: [ { title: "Breakdown", thumb: PH("BD", 640, 360) } ] },
+      {
+        id: "p1",
+        title: "Exploded Futuristic Device",
+        subtitle: "3D / Product Viz",
+        tile: "/images/projects/device-bg.webp",
+        cover: "/images/projects/device-cover.webp",
+        palette: { from: "#0072ff", to: "#00c6ff" },
+      },
+      {
+        id: "p2",
+        title: "Shoe Reel – GP5",
+        subtitle: "Stylized motion",
+        tile: "/images/projects/gp5-bg.webp",
+        palette: { from: "#00b4d8", to: "#0077b6" },
+      },
+      {
+        id: "p3",
+        title: "Product Series",
+        subtitle: "High-contrast look",
+        tile: "/images/projects/product-bg.webp",
+        palette: { from: "#2193b0", to: "#6dd5ed" },
+      },
+      {
+        id: "p3b",
+        title: "Exploded Anim – V2",
+        subtitle: "Hard-surface test",
+        tile: "/images/projects/explode-v2-bg.webp",
+        palette: { from: "#38bdf8", to: "#818cf8" },
+      },
     ],
   },
   {
@@ -135,9 +160,32 @@ export const CATEGORIES: Category[] = [
     label: "Progetti Web",
     icon: Globe,
     projects: [
-      { id: "p4", title: "Fractals Viewer", subtitle: "Interactive shaders", year: "2025", tags: ["Next.js", "WebGL"], tile: "/images/projects/fractals-bg.webp", cover: "/images/projects/fractals-cover.webp", palette: { from: "#1fa2ff", to: "#12d8fa" }, info: [ { title: "Live demo", thumb: PH("Demo", 640, 360) }, { title: "Tech stack", thumb: PH("Stack", 640, 360) } ] },
-      { id: "p5", title: "Gong & Motion", subtitle: "Sito + booking idea", year: "2025", tags: ["Windsurf", "Tailwind"], tile: "/images/projects/gm-bg.webp", palette: { from: "#ff9966", to: "#ff5e62" }, info: [ { title: "Wireframe", thumb: PH("UX", 640, 360) }, { title: "Hero concept", thumb: PH("Hero", 640, 360) } ] },
-      { id: "p5b", title: "Portfolio Template", subtitle: "Interactive 3D hero", year: "2025", tags: ["Next.js", "Three.js"], tile: "/images/projects/template-bg.webp", cover: "/images/projects/template-cover.webp", palette: { from: "#667db6", to: "#0082c8" }, info: [ { title: "Preview", thumb: PH("Prev", 640, 360) } ] },
+      {
+        id: "p4",
+        title: "Fractals Viewer",
+        subtitle: "Interactive shaders",
+        tile: "/images/projects/fractals-bg.webp",
+        cover: "/images/projects/fractals-cover.webp",
+        palette: { from: "#1fa2ff", to: "#12d8fa" },
+        href: "https://fractals.andrekork.online",
+      },
+      {
+        id: "p5",
+        title: "Gong & Motion",
+        subtitle: "Sito + booking idea",
+        tile: "/images/projects/gm-bg.webp",
+        palette: { from: "#ff9966", to: "#ff5e62" },
+        href: "https://gongandmotion.com/en",
+      },
+      {
+        id: "p5b",
+        title: "Portfolio Template",
+        subtitle: "Interactive 3D hero",
+        tile: "/images/projects/template-bg.webp",
+        cover: "/images/projects/template-cover.webp",
+        palette: { from: "#667db6", to: "#0082c8" },
+        href: "https://alessio-portfolio.vercel.app",
+      },
     ],
   },
   {
@@ -145,9 +193,27 @@ export const CATEGORIES: Category[] = [
     label: "Progetti Creativi",
     icon: Sparkles,
     projects: [
-      { id: "p6", title: "Music‑Reactive Fractals", subtitle: "WebGL / GLSL", year: "2025", tags: ["Three.js", "Audio"], tile: "/images/projects/music-fractals-bg.webp", palette: { from: "#6a11cb", to: "#2575fc" }, info: [ { title: "Live shader demo", thumb: PH("Demo", 640, 360) }, { title: "Preset pack", thumb: PH("Presets", 640, 360) } ] },
-      { id: "p7", title: "Lucky Andy visuals", subtitle: "AI + 2D/3D mix", year: "2024", tags: ["Canvas", "AI"], tile: "/images/projects/lucky-andy-bg.webp", palette: { from: "#8e2de2", to: "#4a00e0" }, info: [ { title: "Canvas pack", thumb: PH("Pack", 640, 360) }, { title: "Colorways", thumb: PH("Colors", 640, 360) } ] },
-      { id: "p7b", title: "Shader Toys", subtitle: "Generative doodles", year: "2023", tags: ["GLSL"], tile: "/images/projects/shader-toys-bg.webp", palette: { from: "#fc5c7d", to: "#6a82fb" }, info: [ { title: "Gallery", thumb: PH("Gallery", 640, 360) } ] },
+      {
+        id: "p6",
+        title: "Music-Reactive Fractals",
+        subtitle: "WebGL / GLSL",
+        tile: "/images/projects/music-fractals-bg.webp",
+        palette: { from: "#6a11cb", to: "#2575fc" },
+      },
+      {
+        id: "p7",
+        title: "Lucky Andy visuals",
+        subtitle: "AI + 2D/3D mix",
+        tile: "/images/projects/lucky-andy-bg.webp",
+        palette: { from: "#8e2de2", to: "#4a00e0" },
+      },
+      {
+        id: "p7b",
+        title: "Shader Toys",
+        subtitle: "Generative doodles",
+        tile: "/images/projects/shader-toys-bg.webp",
+        palette: { from: "#fc5c7d", to: "#6a82fb" },
+      },
     ],
   },
   {
@@ -155,9 +221,27 @@ export const CATEGORIES: Category[] = [
     label: "Automazioni AI / Chatbot",
     icon: Bot,
     projects: [
-      { id: "p8", title: "Safety Work – GPT", subtitle: "Assistente testi segnali", year: "2025", tags: ["Prompting", "Automation"], tile: "/images/projects/safety-gpt-bg.webp", palette: { from: "#00c6ff", to: "#0072ff" }, info: [ { title: "Flow n8n", thumb: PH("n8n", 640, 360) }, { title: "Dataset", thumb: PH("KB", 640, 360) } ] },
-      { id: "p9", title: "Newsletter auto‑AI", subtitle: "Contenuti da form + LLM", year: "2025", tags: ["n8n", "Make"], tile: "/images/projects/newsletter-bg.webp", palette: { from: "#00f5a0", to: "#00d9f5" }, info: [ { title: "Pipeline", thumb: PH("Pipe", 640, 360) }, { title: "Templates", thumb: PH("Tpl", 640, 360) } ] },
-      { id: "p9b", title: "Sofia – Creative Agent", subtitle: "Assistant for artists", year: "2024", tags: ["Chatbot", "LLM"], tile: "/images/projects/sofia-bg.webp", palette: { from: "#36d1dc", to: "#5b86e5" }, info: [ { title: "Demo", thumb: PH("Demo", 640, 360) } ] },
+      {
+        id: "p8",
+        title: "Safety Work – GPT",
+        subtitle: "Assistente testi segnali",
+        tile: "/images/projects/safety-gpt-bg.webp",
+        palette: { from: "#00c6ff", to: "#0072ff" },
+      },
+      {
+        id: "p9",
+        title: "Newsletter auto-AI",
+        subtitle: "Contenuti da form + LLM",
+        tile: "/images/projects/newsletter-bg.webp",
+        palette: { from: "#00f5a0", to: "#00d9f5" },
+      },
+      {
+        id: "p9b",
+        title: "Sofia – Creative Agent",
+        subtitle: "Assistant for artists",
+        tile: "/images/projects/sofia-bg.webp",
+        palette: { from: "#36d1dc", to: "#5b86e5" },
+      },
     ],
   },
   {
@@ -165,9 +249,27 @@ export const CATEGORIES: Category[] = [
     label: "Branding & Identity",
     icon: Palette,
     projects: [
-      { id: "p10", title: "Gong & Motion – Identity", subtitle: "Brand System", year: "2025", tags: ["Logo", "Web"], tile: "/images/projects/identity-bg.webp", palette: { from: "#ff512f", to: "#f09819" }, info: [ { title: "Case study", thumb: PH("Case", 640, 360) }, { title: "Assets", thumb: PH("Assets", 640, 360) } ] },
-      { id: "p11", title: "EP / Covers", subtitle: "Artwork set", year: "2024", tags: ["Graphic", "Print"], tile: "/images/projects/ep-bg.webp", palette: { from: "#f7971e", to: "#ffd200" }, info: [ { title: "Covers grid", thumb: PH("Grid", 640, 360) }, { title: "Logo variants", thumb: PH("Logo", 640, 360) } ] },
-      { id: "p11b", title: "Brand Sheet Mini", subtitle: "Palette + Type", year: "2023", tags: ["Guide"], tile: "/images/projects/brand-sheet-bg.webp", palette: { from: "#f85032", to: "#e73827" } },
+      {
+        id: "p10",
+        title: "Gong & Motion – Identity",
+        subtitle: "Brand System",
+        tile: "/images/projects/identity-bg.webp",
+        palette: { from: "#ff512f", to: "#f09819" },
+      },
+      {
+        id: "p11",
+        title: "EP / Covers",
+        subtitle: "Artwork set",
+        tile: "/images/projects/ep-bg.webp",
+        palette: { from: "#f7971e", to: "#ffd200" },
+      },
+      {
+        id: "p11b",
+        title: "Brand Sheet Mini",
+        subtitle: "Palette + Type",
+        tile: "/images/projects/brand-sheet-bg.webp",
+        palette: { from: "#f85032", to: "#e73827" },
+      },
     ],
   },
 ];

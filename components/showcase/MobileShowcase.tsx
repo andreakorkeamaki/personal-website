@@ -42,7 +42,7 @@ function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: Showcas
   );
 }
 
-export default function MobileShowcase({ initialIndex = 0, className, onSelect }: ShowcaseProps) {
+export default function MobileShowcase({ initialIndex = 0, className, onSelect, onOpen }: ShowcaseProps) {
   const flattened = useMemo(() => {
     const entries: { project: typeof CATEGORIES[number]["projects"][number]; catIdx: number; projectIdx: number }[] = [];
     CATEGORIES.forEach((category, catIdx) => {
@@ -97,7 +97,6 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
   const activeEntry = hasProjects ? flattened[index] : undefined;
   const activeProject = activeEntry?.project;
   const activeCatIdx = activeEntry?.catIdx ?? 0;
-  const currentCat = CATEGORIES[activeCatIdx] || CATEGORIES[0];
   const activeCategory = CATEGORIES[activeCatIdx];
 
   const categoryOffsets = useMemo(() => {
@@ -338,8 +337,9 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                     const baseImage = project.cover || project.tile;
                     const placeholder = PH(project.title, 640, 853);
                     return (
-                      <motion.div
+                      <motion.button
                         key={project.id}
+                        type="button"
                         initial={false}
                         animate={{
                           x: translateX,
@@ -351,9 +351,20 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                         transition={{ type: "spring", stiffness: 240, damping: 26, mass: 0.9 }}
                         className={`absolute inset-0 rounded-3xl border border-white/15 bg-black/25 backdrop-blur-sm overflow-hidden shadow-2xl ${
                           isActive ? "ring-2 ring-white/40" : ""
-                        }`}
+                        } cursor-pointer`}
                         style={{ zIndex: 200 - depth * 10 }}
-                        onClick={() => setIndex(i)}
+                        onClick={() => {
+                          if (!isActive) {
+                            setIndex(i);
+                            return;
+                          }
+                          if (onOpen) {
+                            onOpen(project);
+                          } else if (project.href) {
+                            window.open(project.href, "_blank", "noopener,noreferrer");
+                          }
+                        }}
+                        aria-label={isActive ? `Apri ${project.title}` : `Mostra ${project.title}`}
                       >
                         <ShowcaseCardImage
                           src={baseImage}
@@ -372,7 +383,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                             </div>
                           </div>
                         </div>
-                      </motion.div>
+                      </motion.button>
                     );
                   })}
 
