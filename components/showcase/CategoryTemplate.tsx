@@ -13,6 +13,12 @@ function formatAspectRatio(aspectRatio?: string) {
   return aspectRatio;
 }
 
+function getMediaSources(item: CollageItem) {
+  if (item.sources && item.sources.length > 0) return item.sources;
+  if (item.src) return [{ src: item.src }];
+  return [] as Array<{ src: string; type?: string }>;
+}
+
 const modalBackdrop = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
@@ -126,6 +132,8 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
         <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
           {galleryItems.map((item) => {
             const aspect = resolveAspectRatio(item);
+            const inlineSources = getMediaSources(item);
+            const inlinePoster = item.poster ?? item.thumbnail;
             return (
               <button
                 type="button"
@@ -151,8 +159,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                     />
                   ) : (
                     <video
-                      src={item.src}
-                      poster={item.poster ?? item.thumbnail}
+                      poster={inlinePoster}
                       autoPlay
                       muted
                       loop
@@ -164,7 +171,11 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                       onLoadedMetadata={(event) =>
                         registerAspectRatio(item.id, event.currentTarget.videoWidth, event.currentTarget.videoHeight)
                       }
-                    />
+                    >
+                      {inlineSources.map((source) => (
+                        <source key={`${item.id}-${source.src}`} src={source.src} type={source.type} />
+                      ))}
+                    </video>
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-black/0 transition duration-300 group-hover:bg-black/35" />
                   <div className="pointer-events-none absolute inset-x-5 bottom-5 transform opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
@@ -233,7 +244,6 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                 ) : (
                   <video
                     key={activeItem.id}
-                    src={activeItem.src}
                     poster={activeItem.poster ?? activeItem.thumbnail}
                     autoPlay
                     muted
@@ -245,7 +255,11 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                     onLoadedMetadata={(event) =>
                       registerAspectRatio(activeItem.id, event.currentTarget.videoWidth, event.currentTarget.videoHeight)
                     }
-                  />
+                  >
+                    {getMediaSources(activeItem).map((source) => (
+                      <source key={`${activeItem.id}-${source.src}`} src={source.src} type={source.type} />
+                    ))}
+                  </video>
                 )}
               </div>
               <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/80 backdrop-blur-sm">
