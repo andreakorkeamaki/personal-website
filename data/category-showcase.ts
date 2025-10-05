@@ -5,6 +5,7 @@ export type CollageItem = {
   mediaType: CollageMediaType;
   title: string;
   src: string;
+  sources?: Array<{ src: string; type?: string }>;
   thumbnail?: string;
   poster?: string;
   aspectRatio?: string;
@@ -69,7 +70,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         title: "Rotation Loop",
         src: "/projects/products/videoOriginal.webm",
         poster: "/images/projects/product-cover.webp",
-        aspectRatio: "16 / 9",
+        aspectRatio: "9 / 16",
         description: "Short marketing loop highlighting anodised metal transitions.",
         year: "2023",
         software: ["Cinema4D", "Redshift"],
@@ -80,7 +81,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         title: "Accessory Family",
         src: "/projects/products/iphone.webm",
         poster: "/images/projects/product-cover.webp",
-        aspectRatio: "1 / 1",
+        aspectRatio: "16 / 9",
         description: "Supporting ecosystem of modular attachments for the product line.",
         year: "2022",
         software: ["Blender"],
@@ -113,7 +114,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         title: "Safety Work",
         src: "/projects/products/safety_work.webm",
         poster: "/images/projects/product-cover.webp",
-        aspectRatio: "16 / 9",
+        aspectRatio: "9 / 16",
         description: "Safety signage animation designed for workplace rollouts.",
         year: "2024",
         software: ["After Effects"],

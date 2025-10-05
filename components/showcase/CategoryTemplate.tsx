@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -31,6 +31,22 @@ export type CategoryTemplateProps = {
 export default function CategoryTemplate({ category }: CategoryTemplateProps) {
   const [activeItem, setActiveItem] = useState<CollageItem | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const modalVideoRef = useRef<HTMLVideoElement | null>(null);
+  const galleryItems = useMemo(() => category.items, [category.items]);
+  const [dynamicAspectRatios, setDynamicAspectRatios] = useState<Record<string, string>>({});
+
+  const registerAspectRatio = useCallback((id: string, width?: number, height?: number) => {
+    if (!id || !width || !height || Number.isNaN(width) || Number.isNaN(height) || height === 0) {
+      return;
+    }
+    const ratioValue = Number((width / height).toFixed(5)).toString();
+    setDynamicAspectRatios((prev) => (prev[id] === ratioValue ? prev : { ...prev, [id]: ratioValue }));
+  }, []);
+
+  const resolveAspectRatio = useCallback(
+    (item: CollageItem) => formatAspectRatio(dynamicAspectRatios[item.id] ?? item.aspectRatio),
+    [dynamicAspectRatios]
+  );
 
   useEffect(() => {
     setIsMounted(true);
@@ -58,7 +74,35 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
     };
   }, [activeItem]);
 
-  const galleryItems = useMemo(() => category.items, [category.items]);
+  useEffect(() => {
+    const autoplayInline = () => {
+      document
+        .querySelectorAll<HTMLVideoElement>("video[data-inline-autoplay='true']")
+        .forEach((video) => {
+          if (video.dataset.autoplayBound === "true") return;
+          video.dataset.autoplayBound = "true";
+          video.muted = true;
+          video.play().catch(() => undefined);
+        });
+    };
+
+    autoplayInline();
+
+    const timeout = window.setTimeout(autoplayInline, 120);
+    return () => window.clearTimeout(timeout);
+  }, [galleryItems]);
+
+  useEffect(() => {
+    if (!activeItem) return;
+    const video = modalVideoRef.current;
+    if (!video) return;
+    video.currentTime = 0;
+    video.muted = true;
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise.catch(() => undefined);
+    }
+  }, [activeItem]);
 
   return (
     <div className="min-h-screen w-full bg-[#0d0d0d] text-white">
@@ -81,7 +125,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
       <section className="mx-auto max-w-6xl px-6 pb-24">
         <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
           {galleryItems.map((item) => {
-            const aspect = formatAspectRatio(item.aspectRatio);
+            const aspect = resolveAspectRatio(item);
             return (
               <button
                 type="button"
@@ -101,15 +145,25 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                       loading="lazy"
                       decoding="async"
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                      onLoad={(event) =>
+                        registerAspectRatio(item.id, event.currentTarget.naturalWidth, event.currentTarget.naturalHeight)
+                      }
                     />
                   ) : (
                     <video
                       src={item.src}
                       poster={item.poster ?? item.thumbnail}
+                      autoPlay
                       muted
                       loop
                       playsInline
+                      preload="auto"
+                      controls={false}
+                      data-inline-autoplay="true"
                       className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                      onLoadedMetadata={(event) =>
+                        registerAspectRatio(item.id, event.currentTarget.videoWidth, event.currentTarget.videoHeight)
+                      }
                     />
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-black/0 transition duration-300 group-hover:bg-black/35" />
@@ -134,7 +188,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
             onClick={() => setActiveItem(null)}
           >
             <motion.div
-              className="relative mx-auto flex w-full max-w-5xl flex-col gap-6 px-6"
+              className="relative mx-auto flex w-full max-w-5xl flex-col gap-6 overflow-y-auto px-4 py-8 sm:px-6 sm:py-12"
               role="dialog"
               aria-modal="true"
               aria-labelledby="gallery-modal-title"
@@ -144,6 +198,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
               exit="exit"
               transition={{ type: "spring", stiffness: 220, damping: 28 }}
               onClick={(event) => event.stopPropagation()}
+              style={{ maxHeight: "92vh" }}
             >
               <button
                 type="button"
@@ -155,15 +210,25 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
               </button>
               <div
                 className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black"
-                style={activeItem.aspectRatio ? { aspectRatio: formatAspectRatio(activeItem.aspectRatio) } : undefined}
+                style={{
+                  aspectRatio: resolveAspectRatio(activeItem) ?? undefined,
+                  maxHeight: "70vh",
+                }}
               >
                 {activeItem.mediaType === "image" ? (
                   <img
                     src={activeItem.src}
                     alt={activeItem.title}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-contain"
                     loading="lazy"
                     decoding="async"
+                    onLoad={(event) =>
+                      registerAspectRatio(
+                        activeItem.id,
+                        event.currentTarget.naturalWidth,
+                        event.currentTarget.naturalHeight
+                      )
+                    }
                   />
                 ) : (
                   <video
@@ -175,11 +240,15 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                     loop
                     controls
                     playsInline
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-contain"
+                    ref={modalVideoRef}
+                    onLoadedMetadata={(event) =>
+                      registerAspectRatio(activeItem.id, event.currentTarget.videoWidth, event.currentTarget.videoHeight)
+                    }
                   />
                 )}
               </div>
-              <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/80">
+              <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/80 backdrop-blur-sm">
                 <div className="flex flex-col gap-1">
                   <h2 id="gallery-modal-title" className="text-xl font-semibold text-white">
                     {activeItem.title}
@@ -200,6 +269,13 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                   )}
                 </div>
               </div>
+              <button
+                type="button"
+                className="inline-flex h-12 w-full items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-sm font-medium text-white transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:hidden"
+                onClick={() => setActiveItem(null)}
+              >
+                Close
+              </button>
             </motion.div>
           </motion.div>
         )}
