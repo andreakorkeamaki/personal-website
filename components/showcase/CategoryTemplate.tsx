@@ -213,7 +213,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
             >
               <button
                 type="button"
-                className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                className="absolute right-6 top-1 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
                 onClick={() => setActiveItem(null)}
                 aria-label="Close"
               >
