@@ -19,6 +19,20 @@ function getMediaSources(item: CollageItem) {
   return [] as Array<{ src: string; type?: string }>;
 }
 
+function parseAspectRatioValue(aspectRatio?: string) {
+  if (!aspectRatio) return undefined;
+  const cleaned = aspectRatio.replace(/\s+/g, "");
+  if (!cleaned) return undefined;
+  if (cleaned.includes("/")) {
+    const [w, h] = cleaned.split("/").map((value) => Number.parseFloat(value));
+    if (!Number.isFinite(w) || !Number.isFinite(h) || h === 0) return undefined;
+    return w / h;
+  }
+  const numeric = Number.parseFloat(cleaned);
+  if (!Number.isFinite(numeric) || numeric === 0) return undefined;
+  return numeric;
+}
+
 const modalBackdrop = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
@@ -129,18 +143,25 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
       </header>
 
       <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="columns-1 gap-6 sm:columns-2 lg:columns-3">
+        <div className="grid grid-cols-1 gap-6 grid-flow-row-dense sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {galleryItems.map((item) => {
             const aspect = resolveAspectRatio(item);
+            const aspectValue = parseAspectRatioValue(aspect);
+            const isLandscape = aspectValue ? aspectValue >= 1.1 : false;
+            const isUltraWide = aspectValue ? aspectValue >= 1.9 : false;
             const inlineSources = getMediaSources(item);
             const inlinePoster = item.poster ?? item.thumbnail;
+            const gridSpanClass = isLandscape
+              ? isUltraWide
+                ? "lg:col-span-3 xl:col-span-3"
+                : "lg:col-span-2"
+              : "";
             return (
               <button
                 type="button"
                 key={item.id}
                 onClick={() => setActiveItem(item)}
-                className="group relative mb-6 w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 text-left shadow-sm transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                style={{ breakInside: "avoid" as const }}
+                className={`group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 text-left shadow-sm transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${gridSpanClass}`}
               >
                 <div
                   className="relative w-full"
