@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Boxes } from "lucide-react";
+import { Boxes, Globe, Palette } from "lucide-react";
 
 // Types
 export type Project = {
@@ -113,15 +113,14 @@ export function prefetchAllProjectImages() {
 }
 
 // Demo data (same as before)
-import { Globe, Sparkles, Bot, Palette } from "lucide-react";
 export const CATEGORIES: Category[] = [
   // NOTE: To add background images for projects, place them in /public/images/projects/
   // and use the naming convention: {lowercase-project-name}-bg.webp
   // Example: "device-bg.webp", "gp5-bg.webp", "fractals-bg.webp", etc.
   // The system will automatically use these as blurred overlays on the project backgrounds.
   {
-    id: "3d",
-    label: "3D",
+    id: "visual-render",
+    label: "Visual e Render",
     icon: Boxes,
     projects: [
       {
@@ -187,64 +186,8 @@ export const CATEGORIES: Category[] = [
     ],
   },
   {
-    id: "creative",
-    label: "Progetti Creativi",
-    icon: Sparkles,
-    projects: [
-      {
-        id: "p6",
-        title: "Music-Reactive Fractals",
-        subtitle: "WebGL / GLSL",
-        tile: "/images/projects/music-fractals-bg.webp",
-        palette: { from: "#6a11cb", to: "#2575fc" },
-      },
-      {
-        id: "p7",
-        title: "Lucky Andy visuals",
-        subtitle: "AI + 2D/3D mix",
-        tile: "/images/projects/lucky-andy-bg.webp",
-        palette: { from: "#8e2de2", to: "#4a00e0" },
-      },
-      {
-        id: "p7b",
-        title: "Shader Toys",
-        subtitle: "Generative doodles",
-        tile: "/images/projects/shader-toys-bg.webp",
-        palette: { from: "#fc5c7d", to: "#6a82fb" },
-      },
-    ],
-  },
-  {
-    id: "ai",
-    label: "Automazioni AI / Chatbot",
-    icon: Bot,
-    projects: [
-      {
-        id: "p8",
-        title: "Safety Work – GPT",
-        subtitle: "Assistente testi segnali",
-        tile: "/images/projects/safety-gpt-bg.webp",
-        palette: { from: "#00c6ff", to: "#0072ff" },
-      },
-      {
-        id: "p9",
-        title: "Newsletter auto-AI",
-        subtitle: "Contenuti da form + LLM",
-        tile: "/images/projects/newsletter-bg.webp",
-        palette: { from: "#00f5a0", to: "#00d9f5" },
-      },
-      {
-        id: "p9b",
-        title: "Sofia – Creative Agent",
-        subtitle: "Assistant for artists",
-        tile: "/images/projects/sofia-bg.webp",
-        palette: { from: "#36d1dc", to: "#5b86e5" },
-      },
-    ],
-  },
-  {
-    id: "branding",
-    label: "Branding & Identity",
+    id: "case-studies",
+    label: "Case Studies",
     icon: Palette,
     projects: [
       {
