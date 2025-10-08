@@ -1,4 +1,4 @@
-export type CollageMediaType = "image" | "video";
+export type CollageMediaType = "image" | "video" | "youtube";
 
 export type CollageItem = {
   id: string;
@@ -8,6 +8,7 @@ export type CollageItem = {
   sources?: Array<{ src: string; type?: string }>;
   thumbnail?: string;
   poster?: string;
+  embedUrl?: string;
   aspectRatio?: string;
   description?: string;
   year?: string;
@@ -205,10 +206,12 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
     items: [
       {
         id: "music-hero",
-        mediaType: "image",
+        mediaType: "youtube",
         title: "Live Performance Visual",
-        src: "/images/projects/music-cover.webp",
-        aspectRatio: "21 / 9",
+        src: "https://www.youtube.com/embed/PTy5jRM5Mk8",
+        embedUrl: "https://www.youtube.com/embed/PTy5jRM5Mk8?rel=0",
+        thumbnail: "https://img.youtube.com/vi/PTy5jRM5Mk8/hqdefault.jpg",
+        aspectRatio: "16 / 9",
         description: "Stage backdrop designed for widescreen LED walls.",
         year: "2024",
         software: ["TouchDesigner", "Resolume"],
@@ -300,6 +303,18 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         poster: "/images/projects/music-bg.webp",
         aspectRatio: "9 / 16",
         description: "Heart-inspired motion graphics built for an upbeat segment.",
+        year: "2024",
+        software: ["TouchDesigner"],
+      },
+      {
+        id: "music-short-horizon",
+        mediaType: "youtube",
+        title: "YouTube Short Visual",
+        src: "https://www.youtube.com/embed/vTw7R5DUdFU",
+        embedUrl: "https://www.youtube.com/embed/vTw7R5DUdFU?rel=0",
+        thumbnail: "https://img.youtube.com/vi/vTw7R5DUdFU/hqdefault.jpg",
+        aspectRatio: "9 / 16",
+        description: "Short-form showcase embeddato direttamente da YouTube.",
         year: "2024",
         software: ["TouchDesigner"],
       },

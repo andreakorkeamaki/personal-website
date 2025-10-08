@@ -14,6 +14,7 @@ function formatAspectRatio(aspectRatio?: string) {
 }
 
 function getMediaSources(item: CollageItem) {
+  if (item.mediaType !== "video") return [];
   if (item.sources && item.sources.length > 0) return item.sources;
   if (item.src) return [{ src: item.src }];
   return [] as Array<{ src: string; type?: string }>;
@@ -113,7 +114,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
   }, [galleryItems]);
 
   useEffect(() => {
-    if (!activeItem) return;
+    if (!activeItem || activeItem.mediaType !== "video") return;
     const video = modalVideoRef.current;
     if (!video) return;
     video.currentTime = 0;
@@ -177,6 +178,15 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                       onLoad={(event) =>
                         registerAspectRatio(item.id, event.currentTarget.naturalWidth, event.currentTarget.naturalHeight)
                       }
+                    />
+                  ) : item.mediaType === "youtube" ? (
+                    <iframe
+                      src={(item.embedUrl ?? item.src) || ""}
+                      title={item.title}
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
                   ) : (
                     <video
@@ -261,6 +271,15 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                         event.currentTarget.naturalHeight
                       )
                     }
+                  />
+                ) : activeItem.mediaType === "youtube" ? (
+                  <iframe
+                    key={activeItem.id}
+                    src={(activeItem.embedUrl ?? activeItem.src) || ""}
+                    title={activeItem.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
                   />
                 ) : (
                   <video
