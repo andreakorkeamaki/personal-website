@@ -171,6 +171,7 @@ export const CATEGORIES: Category[] = [
         title: "Gong & Motion",
         subtitle: "Sito + booking idea",
         tile: "/images/projects/gm-bg.webp",
+        cover: "images/projects/gm-cover.webp",
         palette: { from: "#ff9966", to: "#ff5e62" },
         href: "https://gongandmotion.com/en",
       },

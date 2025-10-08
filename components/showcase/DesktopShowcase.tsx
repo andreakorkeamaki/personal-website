@@ -204,12 +204,16 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
 
       <div className="relative min-h-[70vh] lg:min-h-[76vh] flex flex-col text-white pb-24">
         <div className="px-4 pt-3">
-          <div className="flex gap-2 overflow-x-auto pb-2 justify-center">
+          <div className="flex gap-2 overflow-x-auto pb-2 justify-center hide-scrollbar">
             {CATEGORIES.map((c,i)=>{
               const Icon = c.icon || Boxes; const activeCat = i===catIndex;
               return (
-                <button key={c.id} onClick={()=>setCatIndex(i)} className={`flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur ${activeCat ? 'border-white/40 bg-white/15' : 'border-white/15 bg-white/5 hover:bg-white/10'}`}>
-                  <Icon className="h-4 w-4" /><span className="text-sm whitespace-nowrap">{c.label}</span>
+                <button
+                  key={c.id}
+                  onClick={()=>setCatIndex(i)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border backdrop-blur-sm text-white/90 transition-colors duration-200 ${activeCat ? 'border-white/60 bg-white/20 shadow-sm' : 'border-white/25 bg-white/10 hover:bg-white/15'}`}
+                >
+                  <Icon className="h-4 w-4 text-white/90" /><span className="text-sm whitespace-nowrap">{c.label}</span>
                 </button>
               );
             })}
