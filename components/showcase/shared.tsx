@@ -169,7 +169,7 @@ export const CATEGORIES: Category[] = [
       {
         id: "p5",
         title: "Gong & Motion",
-        subtitle: "Sito + booking idea",
+        subtitle: "Pagina per servizio di benessere",
         tile: "/images/projects/gm-bg.webp",
         cover: "images/projects/gm-cover.webp",
         palette: { from: "#ff9966", to: "#ff5e62" },
@@ -177,8 +177,8 @@ export const CATEGORIES: Category[] = [
       },
       {
         id: "p5b",
-        title: "Portfolio Template",
-        subtitle: "Interactive 3D hero",
+        title: "Portfolio",
+        subtitle: "Portfolio fotografo",
         tile: "/images/projects/template-bg.webp",
         cover: "/images/projects/template-cover.webp",
         palette: { from: "#667db6", to: "#0082c8" },

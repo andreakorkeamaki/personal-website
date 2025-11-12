@@ -59,10 +59,16 @@ export default function Page() {
       {/* Contact */}
       <section id="contact" className="bg-[#0F0E0E] text-[#FFFDF6]">
         <div className="mx-auto max-w-3xl px-6 py-20">
-          <h2 className="font-display text-3xl md:text-4xl">Contact</h2>
           <ContactForm />
         </div>
       </section>
+
+      <footer className="bg-[#0F0E0E] text-[#FFFDF6]">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 border-t border-white/10 px-6 py-6 text-sm text-white/70 md:flex-row md:items-center md:justify-between">
+          <span>Andrea Korkeamaki · Registered 2025</span>
+          <span>P.IVA: 02487580561</span>
+        </div>
+      </footer>
     </main>
   );
 }
