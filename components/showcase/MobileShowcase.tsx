@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages } from "./shared";
+import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, getVisibleProjects } from "./shared";
 import { Boxes, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 const MOBILE_CARD_IMAGE_SIZE_HINT = "280px";
@@ -46,7 +46,8 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect, 
   const flattened = useMemo(() => {
     const entries: { project: typeof CATEGORIES[number]["projects"][number]; catIdx: number; projectIdx: number }[] = [];
     CATEGORIES.forEach((category, catIdx) => {
-      category.projects.forEach((project, projectIdx) => {
+      const visible = getVisibleProjects(category.projects);
+      visible.forEach((project, projectIdx) => {
         entries.push({ project, catIdx, projectIdx });
       });
     });
@@ -274,7 +275,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect, 
                   const Icon = category.icon || Boxes;
                   const isActiveCat = i === activeCatIdx;
                   const hasCatProjects = categoryOffsets[i] !== -1;
-                  const count = category.projects.length;
+                  const count = getVisibleProjects(category.projects).length;
                   return (
                     <button
                       key={category.id}

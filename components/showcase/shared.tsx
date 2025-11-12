@@ -11,6 +11,7 @@ export type Project = {
   cover?: string;
   href?: string;
   palette?: { from: string; to: string };
+  hidden?: boolean;
 };
 
 export type Category = {
@@ -28,19 +29,21 @@ export type ShowcaseProps = {
 };
 
 // Placeholder asset helper
-export const PH = (label: string, w = 800, h = 800) =>
+export const PH = (label = "", w = 800, h = 800, from = "#0ea5e9", to = "#8b5cf6") =>
   `data:image/svg+xml;utf8,${encodeURIComponent(`
   <svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>
     <defs>
       <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-        <stop offset='0%' stop-color='#0ea5e9'/>
-        <stop offset='100%' stop-color='#8b5cf6'/>
+        <stop offset='0%' stop-color='${from}'/>
+        <stop offset='100%' stop-color='${to}'/>
       </linearGradient>
     </defs>
     <rect width='100%' height='100%' fill='url(#g)'/>
-    <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='Inter, system-ui' font-size='40'>${label}</text>
+    ${label ? `<text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='white' font-family='Inter, system-ui' font-size='40'>${label}</text>` : ""}
   </svg>`)}
 `;
+
+export const getVisibleProjects = (projects: Project[]) => projects.filter((project) => !project.hidden);
 
 const preloadedProjectImages = new Set<string>();
 const preloadingProjectImages = new Set<string>();
@@ -82,6 +85,7 @@ function queuePrefetch(src?: string | null) {
 export function prefetchProjectImages(projects: Project[]) {
   if (typeof window === "undefined") return;
   projects.forEach((project) => {
+    if (!project || project.hidden) return;
     queuePrefetch(project.tile);
     queuePrefetch(project.cover);
   });
@@ -109,7 +113,7 @@ export function prefetchAllProjectImages() {
   if (typeof window === "undefined" || allImagesPrefetched) return;
   allImagesPrefetched = true;
   // Start prefetching immediately on mount for instant switching.
-  prefetchProjectImages(CATEGORIES.flatMap((category) => category.projects));
+  prefetchProjectImages(CATEGORIES.flatMap((category) => getVisibleProjects(category.projects)));
 }
 
 // Demo data (same as before)
@@ -169,7 +173,7 @@ export const CATEGORIES: Category[] = [
       {
         id: "p5",
         title: "Gong & Motion",
-        subtitle: "Pagina per servizio di benessere",
+        subtitle: "Wellness service landing page",
         tile: "/images/projects/gm-bg.webp",
         cover: "images/projects/gm-cover.webp",
         palette: { from: "#ff9966", to: "#ff5e62" },
@@ -178,11 +182,20 @@ export const CATEGORIES: Category[] = [
       {
         id: "p5b",
         title: "Portfolio",
-        subtitle: "Portfolio fotografo",
+        subtitle: "Photographer portfolio",
         tile: "/images/projects/template-bg.webp",
         cover: "/images/projects/template-cover.webp",
         palette: { from: "#667db6", to: "#0082c8" },
         href: "https://alessio-portfolio.vercel.app",
+      },
+      {
+        id: "p6",
+        title: "Attiva",
+        subtitle: "Consulting company website",
+        tile: "/images/projects/Attiva_bg.webp",
+        cover: "/images/projects/Attiva_cover.webp",
+        palette: { from: "#ff9a44", to: "#fc6076" },
+        href: "https://www.atti-va.it",
       },
     ],
   },
@@ -192,11 +205,19 @@ export const CATEGORIES: Category[] = [
     icon: Palette,
     projects: [
       {
+        id: "case-wip",
+        title: "Work in progress",
+        subtitle: "Nuovi case study in arrivo",
+        tile: PH("", 900, 900, "#ff8a00", "#ff3d00"),
+        palette: { from: "#ff8a00", to: "#ff3d00" },
+      },
+      {
         id: "p10",
         title: "Gong & Motion – Identity",
         subtitle: "Brand System",
         tile: "/images/projects/identity-bg.webp",
         palette: { from: "#ff512f", to: "#f09819" },
+        hidden: true,
       },
       {
         id: "p11",
@@ -204,6 +225,7 @@ export const CATEGORIES: Category[] = [
         subtitle: "Artwork set",
         tile: "/images/projects/ep-bg.webp",
         palette: { from: "#f7971e", to: "#ffd200" },
+        hidden: true,
       },
       {
         id: "p11b",
@@ -211,6 +233,7 @@ export const CATEGORIES: Category[] = [
         subtitle: "Palette + Type",
         tile: "/images/projects/brand-sheet-bg.webp",
         palette: { from: "#f85032", to: "#e73827" },
+        hidden: true,
       },
     ],
   },
