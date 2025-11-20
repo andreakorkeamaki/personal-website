@@ -284,11 +284,12 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
       <AnimatePresence>
         {isMounted && activeItem && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 backdrop-blur"
             initial="hidden"
             animate="visible"
             exit="hidden"
             variants={modalBackdrop}
+            style={{ backgroundColor: "rgba(0,0,0,0.9)" }}
             onClick={() => setActiveItem(null)}
           >
             <motion.div
@@ -302,108 +303,125 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
               exit="exit"
               transition={{ type: "spring", stiffness: 220, damping: 28 }}
               onClick={(event) => event.stopPropagation()}
-              style={{ maxHeight: "92vh" }}
+              style={{
+                maxHeight: "92vh",
+                paddingTop: "max(1.5rem, env(safe-area-inset-top, 0px))",
+                paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+              }}
             >
               <button
                 type="button"
-                className="absolute right-6 top-1 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                className="absolute z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white shadow-lg transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
                 onClick={() => setActiveItem(null)}
                 aria-label="Close"
+                style={{
+                  top: "calc(env(safe-area-inset-top, 0px) + 12px)",
+                  right: "calc(env(safe-area-inset-right, 0px) + 16px)",
+                }}
               >
                 <X className="h-5 w-5" />
               </button>
               <div
-              className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black"
-              style={{
-                aspectRatio:
-                  resolveAspectRatio((activeItem.slides && activeItem.slides[modalSlideIndex]) || activeItem) ??
-                  undefined,
-                maxHeight: "70vh",
-              }}
-            >
-              <MediaFrame
-                key={activeItem.slides && activeItem.slides[modalSlideIndex] ? activeItem.slides[modalSlideIndex].id : activeItem.id}
-                item={activeItem.slides && activeItem.slides[modalSlideIndex] ? activeItem.slides[modalSlideIndex] : activeItem}
-                variant="modal"
-                fit="contain"
-                className="bg-black"
-                ref={
-                  activeItem.slides && activeItem.slides[modalSlideIndex]
-                    ? activeItem.slides[modalSlideIndex].mediaType === "video"
-                      ? modalVideoRef
-                      : null
-                    : activeItem.mediaType === "video"
-                      ? modalVideoRef
-                      : null
-                }
-                onImageLoad={(w, h) =>
-                  registerAspectRatio(
+              <div
+                className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black"
+                style={{
+                  aspectRatio:
+                    resolveAspectRatio((activeItem.slides && activeItem.slides[modalSlideIndex]) || activeItem) ??
+                    undefined,
+                  maxHeight: "75vh",
+                }}
+              >
+                <MediaFrame
+                  key={
                     activeItem.slides && activeItem.slides[modalSlideIndex]
                       ? activeItem.slides[modalSlideIndex].id
-                      : activeItem.id,
-                    w,
-                    h
-                  )
-                }
-                onVideoMetadata={(w, h) =>
-                  registerAspectRatio(
+                      : activeItem.id
+                  }
+                  item={
                     activeItem.slides && activeItem.slides[modalSlideIndex]
-                      ? activeItem.slides[modalSlideIndex].id
-                      : activeItem.id,
-                    w,
-                    h
-                  )
-                }
-              />
-              {activeItem.slides && activeItem.slides.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    className="absolute left-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/50 text-white transition hover:bg-black/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                    onClick={() =>
-                      setModalSlideIndex((prev) => {
-                        const len = activeItem.slides?.length ?? 0;
-                        if (len === 0) return 0;
-                        return (prev - 1 + len) % len;
-                      })
-                    }
-                    aria-label="Slide precedente"
-                  >
-                    <span className="sr-only">Previous</span>
-                    {"<"}
-                  </button>
-                  <button
-                    type="button"
-                    className="absolute right-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/50 text-white transition hover:bg-black/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                    onClick={() =>
-                      setModalSlideIndex((prev) => {
-                        const len = activeItem.slides?.length ?? 0;
-                        if (len === 0) return 0;
-                        return (prev + 1) % len;
-                      })
-                    }
-                    aria-label="Slide successiva"
-                  >
-                    <span className="sr-only">Next</span>
-                    {">"}
-                  </button>
-                  <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
-                    {activeItem.slides.map((slide, i) => {
-                      const active = i === modalSlideIndex;
-                      return (
-                        <button
-                          key={`${slide.id}-dot`}
-                          type="button"
-                          className={`h-2.5 w-2.5 rounded-full border border-white/30 transition ${active ? "bg-white" : "bg-white/50 hover:bg-white/80"}`}
-                          onClick={() => setModalSlideIndex(i)}
-                          aria-label={`Vai alla slide ${i + 1} di ${activeItem.slides?.length ?? 0}`}
-                        />
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
+                      ? activeItem.slides[modalSlideIndex]
+                      : activeItem
+                  }
+                  variant="modal"
+                  fit="contain"
+                  className="bg-black"
+                  ref={
+                    activeItem.slides && activeItem.slides[modalSlideIndex]
+                      ? activeItem.slides[modalSlideIndex].mediaType === "video"
+                        ? modalVideoRef
+                        : null
+                      : activeItem.mediaType === "video"
+                        ? modalVideoRef
+                        : null
+                  }
+                  onImageLoad={(w, h) =>
+                    registerAspectRatio(
+                      activeItem.slides && activeItem.slides[modalSlideIndex]
+                        ? activeItem.slides[modalSlideIndex].id
+                        : activeItem.id,
+                      w,
+                      h
+                    )
+                  }
+                  onVideoMetadata={(w, h) =>
+                    registerAspectRatio(
+                      activeItem.slides && activeItem.slides[modalSlideIndex]
+                        ? activeItem.slides[modalSlideIndex].id
+                        : activeItem.id,
+                      w,
+                      h
+                    )
+                  }
+                />
+                {activeItem.slides && activeItem.slides.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      className="absolute left-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/50 text-white transition hover:bg-black/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                      onClick={() =>
+                        setModalSlideIndex((prev) => {
+                          const len = activeItem.slides?.length ?? 0;
+                          if (len === 0) return 0;
+                          return (prev - 1 + len) % len;
+                        })
+                      }
+                      aria-label="Slide precedente"
+                    >
+                      <span className="sr-only">Previous</span>
+                      {"<"}
+                    </button>
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/50 text-white transition hover:bg-black/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                      onClick={() =>
+                        setModalSlideIndex((prev) => {
+                          const len = activeItem.slides?.length ?? 0;
+                          if (len === 0) return 0;
+                          return (prev + 1) % len;
+                        })
+                      }
+                      aria-label="Slide successiva"
+                    >
+                      <span className="sr-only">Next</span>
+                      {">"}
+                    </button>
+                    <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
+                      {activeItem.slides.map((slide, i) => {
+                        const active = i === modalSlideIndex;
+                        return (
+                          <button
+                            key={`${slide.id}-dot`}
+                            type="button"
+                            className={`h-2.5 w-2.5 rounded-full border border-white/30 transition ${active ? "bg-white" : "bg-white/50 hover:bg-white/80"}`}
+                            onClick={() => setModalSlideIndex(i)}
+                            aria-label={`Vai alla slide ${i + 1} di ${activeItem.slides?.length ?? 0}`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
               <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/80 backdrop-blur-sm">
                 <div className="flex flex-col gap-1">
                   <h2 id="gallery-modal-title" className="text-xl font-semibold text-white">
