@@ -5,19 +5,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
 import type { CategoryGallery, CollageItem } from "@/data/category-showcase";
+import MediaFrame from "./MediaFrame";
 
 function formatAspectRatio(aspectRatio?: string) {
   if (!aspectRatio) return undefined;
   if (aspectRatio.includes("/")) return aspectRatio;
   if (aspectRatio.includes(":")) return aspectRatio.replace(":", " / ");
   return aspectRatio;
-}
-
-function getMediaSources(item: CollageItem) {
-  if (item.mediaType !== "video") return [];
-  if (item.sources && item.sources.length > 0) return item.sources;
-  if (item.src) return [{ src: item.src }];
-  return [] as Array<{ src: string; type?: string }>;
 }
 
 function parseAspectRatioValue(aspectRatio?: string) {
@@ -45,15 +39,102 @@ const modalContent = {
   exit: { opacity: 0, scale: 0.96, y: 12 },
 };
 
+type InlineSlideshowProps = {
+  item: CollageItem;
+  onAspect?: (id: string, w?: number, h?: number) => void;
+};
+
+function InlineSlideshow({ item, onAspect }: InlineSlideshowProps) {
+  const slides = item.slides ?? [];
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const total = slides.length;
+
+  useEffect(() => {
+    setIndex(0);
+  }, [total]);
+
+  useEffect(() => {
+    if (!total) return;
+    const id = window.setInterval(() => {
+      if (!paused) setIndex((prev) => (prev + 1) % total);
+    }, 3600);
+    return () => window.clearInterval(id);
+  }, [paused, total]);
+
+  if (total === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      className="relative h-full w-full"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
+      {slides.map((slide, i) => {
+        const isActive = i === index;
+        return (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-500 ${isActive ? "opacity-100" : "opacity-0"}`}
+            aria-hidden={!isActive}
+          >
+            <MediaFrame
+              item={slide}
+              variant="card"
+              fit="cover"
+              className="transition duration-500 group-hover:scale-[1.03]"
+              onImageLoad={(w, h) => onAspect?.(slide.id, w, h)}
+              onVideoMetadata={(w, h) => onAspect?.(slide.id, w, h)}
+            />
+          </div>
+        );
+      })}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
+      <div className="absolute inset-x-4 bottom-4 flex items-center justify-center gap-2">
+        {slides.map((_slide, i) => {
+          const isActive = i === index;
+          return (
+            <button
+              key={`dot-${item.id}-${i}`}
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setIndex(i);
+              }}
+              className={`h-2.5 w-2.5 rounded-full border border-white/30 bg-white/40 transition ${isActive ? "bg-white shadow" : "hover:bg-white/70"}`}
+              aria-label={`Vai alla slide ${i + 1} di ${total}`}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export type CategoryTemplateProps = {
   category: CategoryGallery;
 };
 
 export default function CategoryTemplate({ category }: CategoryTemplateProps) {
   const [activeItem, setActiveItem] = useState<CollageItem | null>(null);
+  const [modalSlideIndex, setModalSlideIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const modalVideoRef = useRef<HTMLVideoElement | null>(null);
-  const galleryItems = useMemo(() => category.items, [category.items]);
+  const galleryItems = useMemo(() => {
+    return category.items
+      .map((item, index) => ({ item, index }))
+      .sort((a, b) => {
+        const orderA = Number.isFinite(a.item.order) ? (a.item.order as number) : Number.POSITIVE_INFINITY;
+        const orderB = Number.isFinite(b.item.order) ? (b.item.order as number) : Number.POSITIVE_INFINITY;
+        if (orderA === orderB) return a.index - b.index;
+        return orderA - orderB;
+      })
+      .map(({ item }) => item);
+  }, [category.items]);
   const [dynamicAspectRatios, setDynamicAspectRatios] = useState<Record<string, string>>({});
 
   const registerAspectRatio = useCallback((id: string, width?: number, height?: number) => {
@@ -75,9 +156,19 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
 
   useEffect(() => {
     if (!activeItem) return;
+    setModalSlideIndex(0);
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setActiveItem(null);
+      }
+      const slides = activeItem.slides ?? [];
+      if (slides.length > 0 && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
+        event.preventDefault();
+        setModalSlideIndex((prev) => {
+          const len = slides.length;
+          if (len === 0) return 0;
+          return event.key === "ArrowRight" ? (prev + 1) % len : (prev - 1 + len) % len;
+        });
       }
     };
     window.addEventListener("keydown", handleKey);
@@ -146,12 +237,11 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
       <section className="mx-auto max-w-6xl px-6 pb-24">
         <div className="grid grid-cols-1 gap-6 grid-flow-row-dense sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {galleryItems.map((item) => {
-            const aspect = resolveAspectRatio(item);
+            const primaryMedia = item.slides?.[0] ?? item;
+            const aspect = resolveAspectRatio(primaryMedia);
             const aspectValue = parseAspectRatioValue(aspect);
             const isLandscape = aspectValue ? aspectValue >= 1.1 : false;
             const isUltraWide = aspectValue ? aspectValue >= 1.9 : false;
-            const inlineSources = getMediaSources(item);
-            const inlinePoster = item.poster ?? item.thumbnail;
             const gridSpanClass = isLandscape
               ? isUltraWide
                 ? "lg:col-span-3 xl:col-span-3"
@@ -168,45 +258,17 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                   className="relative w-full"
                   style={aspect ? { aspectRatio: aspect } : undefined}
                 >
-                  {item.mediaType === "image" ? (
-                    <img
-                      src={item.thumbnail ?? item.src}
-                      alt={item.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                      onLoad={(event) =>
-                        registerAspectRatio(item.id, event.currentTarget.naturalWidth, event.currentTarget.naturalHeight)
-                      }
-                    />
-                  ) : item.mediaType === "youtube" ? (
-                    <iframe
-                      src={(item.embedUrl ?? item.src) || ""}
-                      title={item.title}
-                      loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                    />
+                  {item.slides && item.slides.length > 0 ? (
+                    <InlineSlideshow item={item} onAspect={(id, w, h) => registerAspectRatio(id, w, h)} />
                   ) : (
-                    <video
-                      poster={inlinePoster}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      controls={false}
-                      data-inline-autoplay="true"
-                      className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                      onLoadedMetadata={(event) =>
-                        registerAspectRatio(item.id, event.currentTarget.videoWidth, event.currentTarget.videoHeight)
-                      }
-                    >
-                      {inlineSources.map((source) => (
-                        <source key={`${item.id}-${source.src}`} src={source.src} type={source.type} />
-                      ))}
-                    </video>
+                    <MediaFrame
+                      item={item}
+                      variant="card"
+                      fit="cover"
+                      className="transition duration-500 group-hover:scale-[1.03]"
+                      onImageLoad={(w, h) => registerAspectRatio(item.id, w, h)}
+                      onVideoMetadata={(w, h) => registerAspectRatio(item.id, w, h)}
+                    />
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-black/0 transition duration-300 group-hover:bg-black/35" />
                   <div className="pointer-events-none absolute inset-x-5 bottom-5 transform opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
@@ -251,57 +313,97 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                 <X className="h-5 w-5" />
               </button>
               <div
-                className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black"
-                style={{
-                  aspectRatio: resolveAspectRatio(activeItem) ?? undefined,
-                  maxHeight: "70vh",
-                }}
-              >
-                {activeItem.mediaType === "image" ? (
-                  <img
-                    src={activeItem.src}
-                    alt={activeItem.title}
-                    className="absolute inset-0 h-full w-full object-contain"
-                    loading="lazy"
-                    decoding="async"
-                    onLoad={(event) =>
-                      registerAspectRatio(
-                        activeItem.id,
-                        event.currentTarget.naturalWidth,
-                        event.currentTarget.naturalHeight
-                      )
+              className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black"
+              style={{
+                aspectRatio:
+                  resolveAspectRatio((activeItem.slides && activeItem.slides[modalSlideIndex]) || activeItem) ??
+                  undefined,
+                maxHeight: "70vh",
+              }}
+            >
+              <MediaFrame
+                key={activeItem.slides && activeItem.slides[modalSlideIndex] ? activeItem.slides[modalSlideIndex].id : activeItem.id}
+                item={activeItem.slides && activeItem.slides[modalSlideIndex] ? activeItem.slides[modalSlideIndex] : activeItem}
+                variant="modal"
+                fit="contain"
+                className="bg-black"
+                ref={
+                  activeItem.slides && activeItem.slides[modalSlideIndex]
+                    ? activeItem.slides[modalSlideIndex].mediaType === "video"
+                      ? modalVideoRef
+                      : null
+                    : activeItem.mediaType === "video"
+                      ? modalVideoRef
+                      : null
+                }
+                onImageLoad={(w, h) =>
+                  registerAspectRatio(
+                    activeItem.slides && activeItem.slides[modalSlideIndex]
+                      ? activeItem.slides[modalSlideIndex].id
+                      : activeItem.id,
+                    w,
+                    h
+                  )
+                }
+                onVideoMetadata={(w, h) =>
+                  registerAspectRatio(
+                    activeItem.slides && activeItem.slides[modalSlideIndex]
+                      ? activeItem.slides[modalSlideIndex].id
+                      : activeItem.id,
+                    w,
+                    h
+                  )
+                }
+              />
+              {activeItem.slides && activeItem.slides.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className="absolute left-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/50 text-white transition hover:bg-black/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                    onClick={() =>
+                      setModalSlideIndex((prev) => {
+                        const len = activeItem.slides?.length ?? 0;
+                        if (len === 0) return 0;
+                        return (prev - 1 + len) % len;
+                      })
                     }
-                  />
-                ) : activeItem.mediaType === "youtube" ? (
-                  <iframe
-                    key={activeItem.id}
-                    src={(activeItem.embedUrl ?? activeItem.src) || ""}
-                    title={activeItem.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="absolute inset-0 h-full w-full"
-                  />
-                ) : (
-                  <video
-                    key={activeItem.id}
-                    poster={activeItem.poster ?? activeItem.thumbnail}
-                    autoPlay
-                    muted
-                    loop
-                    controls
-                    playsInline
-                    className="absolute inset-0 h-full w-full object-contain"
-                    ref={modalVideoRef}
-                    onLoadedMetadata={(event) =>
-                      registerAspectRatio(activeItem.id, event.currentTarget.videoWidth, event.currentTarget.videoHeight)
-                    }
+                    aria-label="Slide precedente"
                   >
-                    {getMediaSources(activeItem).map((source) => (
-                      <source key={`${activeItem.id}-${source.src}`} src={source.src} type={source.type} />
-                    ))}
-                  </video>
-                )}
-              </div>
+                    <span className="sr-only">Previous</span>
+                    {"<"}
+                  </button>
+                  <button
+                    type="button"
+                    className="absolute right-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/50 text-white transition hover:bg-black/65 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                    onClick={() =>
+                      setModalSlideIndex((prev) => {
+                        const len = activeItem.slides?.length ?? 0;
+                        if (len === 0) return 0;
+                        return (prev + 1) % len;
+                      })
+                    }
+                    aria-label="Slide successiva"
+                  >
+                    <span className="sr-only">Next</span>
+                    {">"}
+                  </button>
+                  <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2">
+                    {activeItem.slides.map((slide, i) => {
+                      const active = i === modalSlideIndex;
+                      return (
+                        <button
+                          key={`${slide.id}-dot`}
+                          type="button"
+                          className={`h-2.5 w-2.5 rounded-full border border-white/30 transition ${active ? "bg-white" : "bg-white/50 hover:bg-white/80"}`}
+                          onClick={() => setModalSlideIndex(i)}
+                          aria-label={`Vai alla slide ${i + 1} di ${activeItem.slides?.length ?? 0}`}
+                        />
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
               <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/80 backdrop-blur-sm">
                 <div className="flex flex-col gap-1">
                   <h2 id="gallery-modal-title" className="text-xl font-semibold text-white">

@@ -1,6 +1,6 @@
 export type CollageMediaType = "image" | "video" | "youtube";
 
-export type CollageItem = {
+type CollageItemBase = {
   id: string;
   mediaType: CollageMediaType;
   title: string;
@@ -13,6 +13,13 @@ export type CollageItem = {
   description?: string;
   year?: string;
   software?: string[];
+  order?: number;
+};
+
+export type CollageSlide = Omit<CollageItemBase, "slides">;
+
+export type CollageItem = CollageItemBase & {
+  slides?: CollageSlide[];
 };
 
 export type CategoryGallery = {
@@ -59,6 +66,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Rotating CD loop crafted for Aissela, focusing on reflective surfaces and music-inspired lighting.",
         year: "2023",
         software: ["Blender"],
+        order: 1,
       },
       {
         id: "prod-accessory",
@@ -74,6 +82,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "iPhone-inspired motion study focusing on animation and lighting .",
         year: "2022",
         software: ["Blender"],
+        order: 2,
       },
       {
         id: "prod-vertical",
@@ -89,6 +98,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Energetic sweater animation designed as a vertical piece for social storytelling.",
         year: "2024",
         software: ["Blender"],
+        order: 3,
       },
       {
         id: "prod-exploded",
@@ -104,6 +114,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Exploded animation highlighting the internal components of a camera concept.",
         year: "2024",
         software: ["Blender"],
+        order: 11,
       },
       {
         id: "prod-safety",
@@ -119,6 +130,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "3d modeling texturing and animation of Safety work packaging.",
         year: "2024",
         software: ["Blender"],
+        order: 5,
       },
       {
         id: "prod-cardboard",
@@ -134,6 +146,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Sustainable cardboard packaging reveal with layered motion design.",
         year: "2024",
         software: ["Blender"],
+        order: 6,
       },
       {
         id: "prod-loop-alt",
@@ -149,6 +162,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Cardboard-inspired looping animation created as an interactive highlight for the website.",
         year: "2024",
         software: ["Blender"],
+        order: 7,
       },
       {
         id: "prod-cd-campaign",
@@ -164,6 +178,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Compact disc concept exploring Spotify-inspired lighting and reflections.",
         year: "2024",
         software: ["Blender"],
+        order: 8,
       },
       {
         id: "prod-assembly",
@@ -179,6 +194,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "AI-generated perfume ad with motion and lighting design.",
         year: "2024",
         software: ["AI image generation, AI video generation"],
+        order: 9,
       },
       {
         id: "prod-safety-table",
@@ -194,6 +210,42 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Safetywork signage package animation in a workplace setting.",
         year: "2024",
         software: ["Blender"],
+        order: 10,
+      },
+      {
+        id: "prod-slideshow-hoon",
+        mediaType: "image",
+        title: "Hoon Render Series",
+        src: "/projects/products/slideshow/hoon/Render_1.webp",
+        thumbnail: "/projects/products/slideshow/hoon/Render_1.webp",
+        aspectRatio: "16 / 9",
+        description: "Set di render (hero, mid, wireframe) del concept Hoon.",
+        year: "2024",
+        software: ["Blender"],
+        order: 4,
+        slides: [
+          {
+            id: "prod-slideshow-hoon-1",
+            mediaType: "image",
+            title: "Hoon Render 1",
+            src: "/projects/products/slideshow/hoon/Render_1.webp",
+            aspectRatio: "16 / 9",
+          },
+          {
+            id: "prod-slideshow-hoon-2",
+            mediaType: "image",
+            title: "Hoon Render 2",
+            src: "/projects/products/slideshow/hoon/Render_2.webp",
+            aspectRatio: "16 / 9",
+          },
+          {
+            id: "prod-slideshow-hoon-3",
+            mediaType: "image",
+            title: "Hoon Render 3",
+            src: "/projects/products/slideshow/hoon/Render_3.webp",
+            aspectRatio: "16 / 9",
+          },
+        ],
       },
     ],
   },
@@ -215,6 +267,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Creative abstract music video.",
         year: "2024",
         software: ["Runway", "After Effects"],
+        order: 1,
       },
       {
         id: "music-canvas-clara",
@@ -230,6 +283,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "3d animation for Aissela Clara.",
         year: "2024",
         software: ["Blender", "Runway", "After Effects"],
+        order: 2,
       },
       {
         id: "music-canvas-fosca",
@@ -245,6 +299,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "3d animation for Aissela Fosca.",
         year: "2024",
         software: ["Blender."],
+        order: 3,
       },
       {
         id: "music-sequence-0001",
@@ -260,6 +315,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "3d animation for Spotify visual concept playing with fracture and lighting.",
         year: "2024",
         software: ["Blender", "After Effects"],
+        order: 4,
       },
       {
         id: "music-stomaco",
@@ -347,6 +403,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Liquid metal morph using signed-distance-field animations.",
         year: "2023",
         software: ["Houdini", "Octane"],
+        order: 2,
       },
       {
         id: "artistic-vertical",
@@ -357,6 +414,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Vertical poster exploring glitch typography.",
         year: "2022",
         software: ["Photoshop"],
+        order: 3,
       },
       {
         id: "artistic-square",
@@ -367,6 +425,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Hybrid collage combining AI and matte painting techniques.",
         year: "2024",
         software: ["Midjourney", "Photoshop"],
+        order: 4,
       },
       {
         id: "artistic-panorama",
@@ -377,6 +436,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Projection mapping overview from an experiential installation.",
         year: "2023",
         software: ["TouchDesigner", "Notch"],
+        order: 5,
       },
     ],
   },
