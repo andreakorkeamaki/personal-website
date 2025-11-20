@@ -114,7 +114,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Exploded animation highlighting the internal components of a camera concept.",
         year: "2024",
         software: ["Blender"],
-        order: 11,
+        order: 6,
       },
       {
         id: "prod-safety",
@@ -146,7 +146,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Sustainable cardboard packaging reveal with layered motion design.",
         year: "2024",
         software: ["Blender"],
-        order: 6,
+        order: 11,
       },
       {
         id: "prod-loop-alt",
