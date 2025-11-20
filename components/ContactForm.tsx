@@ -54,11 +54,11 @@ export default function ContactForm() {
         type="button"
         className="mt-20 inline-flex items-center gap-3 rounded-full border border-white/30 bg-white/10 px-15 py-8  text-lg font-medium text-white transition hover:bg-white/20"
         onClick={() => {
-          window.location.href = "mailto:andreakorkeamaki@gmail.com";
+          window.location.href = "mailto:info@andrekork.online";
         }}
       >
         <Mail size={18} />
-        andreakorkeamaki@gmail.com
+        info@andrekork.online
       </button>
 
       <div className="mt-auto flex flex-wrap justify-center gap-4 pt-10">
