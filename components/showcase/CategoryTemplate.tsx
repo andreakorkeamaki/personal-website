@@ -235,8 +235,8 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
       </header>
 
       <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="grid grid-cols-1 gap-6 grid-flow-row-dense sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {galleryItems.map((item) => {
+      <div className="grid grid-cols-1 gap-6 grid-flow-row-dense sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+         {galleryItems.map((item) => {
             const primaryMedia = item.slides?.[0] ?? item;
             const aspect = resolveAspectRatio(primaryMedia);
             const aspectValue = parseAspectRatioValue(aspect);
@@ -248,10 +248,17 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                 : "lg:col-span-2"
               : "";
             return (
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 key={item.id}
                 onClick={() => setActiveItem(item)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setActiveItem(item);
+                  }
+                }}
                 className={`group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 text-left shadow-sm transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${gridSpanClass}`}
               >
                 <div
@@ -275,7 +282,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                     <p className="text-sm font-medium">{item.title}</p>
                   </div>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -309,19 +316,6 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                 paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
               }}
             >
-              <button
-                type="button"
-                className="absolute z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white shadow-lg transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                onClick={() => setActiveItem(null)}
-                aria-label="Close"
-                style={{
-                  top: "calc(env(safe-area-inset-top, 0px) + 12px)",
-                  right: "calc(env(safe-area-inset-right, 0px) + 16px)",
-                }}
-              >
-                <X className="h-5 w-5" />
-              </button>
-              <div
               <div
                 className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-black"
                 style={{
