@@ -1,9 +1,10 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, getVisibleProjects } from "./shared";
 import { Boxes } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const CARD_WIDTH = 230;
 const CARD_HEIGHT = 260;
@@ -47,6 +48,7 @@ function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: Showcas
 }
 
 export default function DesktopShowcase({ initialIndex = 0, onOpen, className }: ShowcaseProps) {
+  const router = useRouter();
   const [catIndex, setCatIndex] = useState(0);
   const currentCat = CATEGORIES[catIndex];
   const visibleProjects = useMemo(() => getVisibleProjects(currentCat.projects), [currentCat]);
@@ -63,6 +65,24 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
   const nextIndexRef = useRef<number | null>(null);
   const prevCatRef = useRef(catIndex);
   const [sectionActive, setSectionActive] = useState(false);
+
+  const handleOpen = useCallback(
+    (project?: (typeof CATEGORIES)[number]["projects"][number]) => {
+      if (!project) return;
+      if (onOpen) {
+        onOpen(project);
+        return;
+      }
+      if (!project.href) return;
+      const isExternal = /^https?:\/\//i.test(project.href) || project.href.startsWith("mailto:") || project.href.startsWith("tel:");
+      if (isExternal) {
+        window.open(project.href, "_blank", "noopener,noreferrer");
+      } else {
+        router.push(project.href);
+      }
+    },
+    [onOpen, router]
+  );
 
   useEffect(() => {
     prefetchProjectImages(visibleProjects);
@@ -154,12 +174,12 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
       }
       if (e.key === 'Enter' && active) {
         e.preventDefault();
-        onOpen ? onOpen(active) : window.open(active.href || '#','_blank');
+        handleOpen(active);
       }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [active, projectCount, sectionActive, onOpen, index, catIndex]);
+  }, [active, projectCount, sectionActive, onOpen, index, catIndex, handleOpen]);
 
   const bgGradient = useMemo(() => {
     const from = active?.palette?.from || '#0ea5e9';
@@ -238,11 +258,7 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
                     onClick={() => {
                       setHoverIndex(null);
                       setIndex(i);
-                      if (onOpen) {
-                        onOpen(p);
-                      } else if (p.href) {
-                        window.open(p.href, '_blank', 'noopener,noreferrer');
-                      }
+                      handleOpen(p);
                     }}
                     className={`relative shrink-0 rounded-lg border border-white/15 bg-black/20 backdrop-blur-sm shadow-xl overflow-hidden ${activeCard ? 'ring-2 ring-white/50' : 'hover:border-white/30'} cursor-pointer`}
                     style={{ width: CARD_WIDTH, height: CARD_HEIGHT, transformOrigin: 'bottom center' }}

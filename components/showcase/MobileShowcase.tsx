@@ -1,9 +1,10 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, getVisibleProjects } from "./shared";
 import { Boxes, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const MOBILE_CARD_IMAGE_SIZE_HINT = "280px";
 
@@ -43,6 +44,7 @@ function ShowcaseCardImage({ src, placeholder, alt, priority, loading }: Showcas
 }
 
 export default function MobileShowcase({ initialIndex = 0, className, onSelect, onOpen }: ShowcaseProps) {
+  const router = useRouter();
   const flattened = useMemo(() => {
     const entries: { project: typeof CATEGORIES[number]["projects"][number]; catIdx: number; projectIdx: number }[] = [];
     CATEGORIES.forEach((category, catIdx) => {
@@ -59,6 +61,23 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect, 
   const boundedInitialIndex = hasProjects ? Math.min(Math.max(0, initialIndex), safeLen - 1) : 0;
   const [index, setIndex] = useState(boundedInitialIndex);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const handleOpen = useCallback(
+    (project?: (typeof CATEGORIES)[number]["projects"][number]) => {
+      if (!project) return;
+      if (onOpen) {
+        onOpen(project);
+        return;
+      }
+      if (!project.href) return;
+      const isExternal = /^https?:\/\//i.test(project.href) || project.href.startsWith("mailto:") || project.href.startsWith("tel:");
+      if (isExternal) {
+        window.open(project.href, "_blank", "noopener,noreferrer");
+      } else {
+        router.push(project.href);
+      }
+    },
+    [onOpen, router]
+  );
 
   useEffect(() => {
     prefetchProjectImages(flattened.map((entry) => entry.project));
@@ -359,11 +378,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect, 
                             setIndex(i);
                             return;
                           }
-                          if (onOpen) {
-                            onOpen(project);
-                          } else if (project.href) {
-                            window.open(project.href, "_blank", "noopener,noreferrer");
-                          }
+                          handleOpen(project);
                         }}
                         aria-label={isActive ? `Apri ${project.title}` : `Mostra ${project.title}`}
                       >

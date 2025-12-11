@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import Link from "next/link";
 
-import type { CategoryGallery, CollageItem } from "@/data/category-showcase";
+import { CATEGORY_SHOWCASE_GALLERIES, type CategoryGallery, type CollageItem } from "@/data/category-showcase";
 import MediaFrame from "./MediaFrame";
 
 function formatAspectRatio(aspectRatio?: string) {
@@ -149,6 +149,10 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
     (item: CollageItem) => formatAspectRatio(dynamicAspectRatios[item.id] ?? item.aspectRatio),
     [dynamicAspectRatios]
   );
+  const navCategories = useMemo(
+    () => Object.values(CATEGORY_SHOWCASE_GALLERIES).map(({ slug, title }) => ({ slug, title })),
+    []
+  );
 
   useEffect(() => {
     setIsMounted(true);
@@ -218,6 +222,35 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
 
   return (
     <div className="min-h-screen w-full bg-[#0d0d0d] text-white">
+      <nav className="sticky top-0 z-40 border-b border-white/10 bg-[#0d0d0d]/85 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-4">
+          <Link
+            href="/#projects"
+            className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          >
+            ← Torna ai progetti
+          </Link>
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar">
+            {navCategories.map(({ slug, title }) => {
+              const isActive = slug === category.slug;
+              return (
+                <Link
+                  key={slug}
+                  href={`/showcase/${slug}`}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`rounded-full border px-3 py-2 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
+                    isActive
+                      ? "border-white bg-white text-black"
+                      : "border-white/20 bg-white/5 text-white/80 hover:bg-white/15"
+                  }`}
+                >
+                  {title}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </nav>
       <header className="mx-auto max-w-6xl px-6 pb-12 pt-20 sm:pt-24">
         <div className="flex flex-col gap-3">
           {category.tagline && (
