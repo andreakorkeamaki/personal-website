@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, getVisibleProjects } from "./shared";
 import { Boxes, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 
 const MOBILE_CARD_IMAGE_SIZE_HINT = "280px";
 
@@ -73,7 +74,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect, 
       if (isExternal) {
         window.open(project.href, "_blank", "noopener,noreferrer");
       } else {
-        router.push(project.href);
+        router.push(project.href as Route);
       }
     },
     [onOpen, router]

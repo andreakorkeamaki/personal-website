@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { CATEGORIES, ShowcaseProps, PH, prefetchProjectImages, prefetchAllProjectImages, getVisibleProjects } from "./shared";
 import { Boxes } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 
 const CARD_WIDTH = 230;
 const CARD_HEIGHT = 260;
@@ -78,7 +79,7 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
       if (isExternal) {
         window.open(project.href, "_blank", "noopener,noreferrer");
       } else {
-        router.push(project.href);
+        router.push(project.href as Route);
       }
     },
     [onOpen, router]
