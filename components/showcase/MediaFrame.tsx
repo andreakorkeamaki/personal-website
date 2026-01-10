@@ -6,11 +6,13 @@ import type { CollageItem } from "@/data/category-showcase";
 
 type MediaFrameVariant = "card" | "modal";
 type ObjectFit = "cover" | "contain";
+type ObjectPosition = "center" | "top" | "bottom" | "left" | "right";
 
 export type MediaFrameProps = {
   item: CollageItem;
   variant?: MediaFrameVariant;
   fit?: ObjectFit;
+  position?: ObjectPosition;
   className?: string;
   allowFullScreen?: boolean;
   autoPlay?: boolean;
@@ -35,6 +37,7 @@ const MediaFrame = React.forwardRef<HTMLVideoElement | null, MediaFrameProps>(fu
     item,
     variant = "card",
     fit = "cover",
+    position = "center",
     className = "",
     allowFullScreen = true,
     autoPlay = variant === "card",
@@ -49,7 +52,19 @@ const MediaFrame = React.forwardRef<HTMLVideoElement | null, MediaFrameProps>(fu
   ref
 ) {
   const objectFit = fit === "contain" ? "object-contain" : "object-cover";
-  const commonClass = `absolute inset-0 h-full w-full ${objectFit} ${className}`.trim();
+  const interactionClass = variant === "card" ? "pointer-events-none select-none" : "";
+  const objectPosition =
+    position === "top"
+      ? "object-top"
+      : position === "bottom"
+        ? "object-bottom"
+        : position === "left"
+          ? "object-left"
+          : position === "right"
+            ? "object-right"
+            : "object-center";
+  const commonClass =
+    `absolute inset-0 block h-full w-full ${objectFit} ${objectPosition} ${interactionClass} ${className}`.trim();
 
   if (item.mediaType === "image") {
     const src = variant === "card" ? item.thumbnail ?? item.src : item.src;
@@ -73,7 +88,7 @@ const MediaFrame = React.forwardRef<HTMLVideoElement | null, MediaFrameProps>(fu
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen={allowFullScreen}
         loading={variant === "card" ? "lazy" : "eager"}
-        className={commonClass}
+        className={`${commonClass} border-0`}
       />
     );
   }
@@ -89,7 +104,7 @@ const MediaFrame = React.forwardRef<HTMLVideoElement | null, MediaFrameProps>(fu
       loop={loop}
       controls={controls}
       playsInline={playsInline}
-      preload="auto"
+      preload={variant === "card" ? "metadata" : "auto"}
       data-inline-autoplay={autoPlayInline ? "true" : undefined}
       className={commonClass}
       ref={ref}

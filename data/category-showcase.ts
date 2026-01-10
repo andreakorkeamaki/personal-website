@@ -14,6 +14,7 @@ type CollageItemBase = {
   year?: string;
   software?: string[];
   order?: number;
+  gridRowStart?: number;
 };
 
 export type CollageSlide = Omit<CollageItemBase, "slides">;
@@ -62,7 +63,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
           { src: "/projects/products/videoOriginal.webm", type: "video/webm" },
         ],
         poster: "/images/projects/product-cover.webp",
-        aspectRatio: "3 / 2",
+        aspectRatio: "9 / 16",
         description: "Rotating CD loop crafted for Aissela, focusing on reflective surfaces and music-inspired lighting.",
         year: "2023",
         software: ["Blender"],
@@ -83,6 +84,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         year: "2022",
         software: ["Blender"],
         order: 2,
+        gridRowStart: 2,
       },
       {
         id: "prod-vertical",
@@ -94,7 +96,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
           { src: "/projects/products/VideoHoonColorato.webm", type: "video/webm" },
         ],
         poster: "/images/projects/product-cover.webp",
-        aspectRatio: "16 / 9",
+        aspectRatio: "360 / 527",
         description: "Energetic sweater animation designed as a vertical piece for social storytelling.",
         year: "2024",
         software: ["Blender"],
@@ -126,7 +128,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
           { src: "/projects/products/safety_work.webm", type: "video/webm" },
         ],
         poster: "/images/projects/product-cover.webp",
-        aspectRatio: "16 / 9",
+        aspectRatio: "9 / 16",
         description: "3d modeling texturing and animation of Safety work packaging.",
         year: "2024",
         software: ["Blender"],
@@ -174,7 +176,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
           { src: "/projects/products/CD_spotifyb.webm", type: "video/webm" },
         ],
         poster: "/images/projects/product-cover.webp",
-        aspectRatio: "3 / 2",
+        aspectRatio: "540 / 847",
         description: "Compact disc concept exploring Spotify-inspired lighting and reflections.",
         year: "2024",
         software: ["Blender"],
@@ -190,7 +192,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
           { src: "/projects/products/montaggio_1.webm", type: "video/webm" },
         ],
         poster: "/images/projects/product-cover.webp",
-        aspectRatio: "4 / 3",
+        aspectRatio: "1 / 1",
         description: "AI-generated perfume ad with motion and lighting design.",
         year: "2024",
         software: ["AI image generation, AI video generation"],
@@ -267,7 +269,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         description: "Creative abstract music video.",
         year: "2024",
         software: ["Runway", "After Effects"],
-        order: 1,
+        order: 2,
       },
       {
         id: "music-canvas-clara",
@@ -279,11 +281,11 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
           { src: "/projects/music/Canvas_clara.webm", type: "video/webm" },
         ],
         poster: "/images/projects/music-bg.webp",
-        aspectRatio: "9 / 16",
+        aspectRatio: "359 / 640",
         description: "3d animation for Aissela Clara.",
         year: "2024",
         software: ["Blender", "Runway", "After Effects"],
-        order: 2,
+        order: 1,
       },
       {
         id: "music-canvas-fosca",
@@ -327,7 +329,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
           { src: "/projects/music/StomacoInsta.webm", type: "video/webm" },
         ],
         poster: "/images/projects/music-bg.webp",
-        aspectRatio: "9 / 16",
+        aspectRatio: "45 / 79",
         description: "High-energy loop crafted for social teasers of the Stomaco project.",
         year: "2024",
         software: ["After Effects", "Premiere Pro"],

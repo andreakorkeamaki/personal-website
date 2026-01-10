@@ -39,6 +39,12 @@ const modalContent = {
   exit: { opacity: 0, scale: 0.96, y: 12 },
 };
 
+const gridRowStartClasses: Record<number, string> = {
+  2: "lg:row-start-2 xl:row-start-2",
+  3: "lg:row-start-3 xl:row-start-3",
+  4: "lg:row-start-4 xl:row-start-4",
+};
+
 type InlineSlideshowProps = {
   item: CollageItem;
   onAspect?: (id: string, w?: number, h?: number) => void;
@@ -137,13 +143,27 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
   }, [category.items]);
   const [dynamicAspectRatios, setDynamicAspectRatios] = useState<Record<string, string>>({});
 
-  const registerAspectRatio = useCallback((id: string, width?: number, height?: number) => {
+  const explicitAspectRatioIds = useMemo(() => {
+    const ids = new Set<string>();
+    galleryItems.forEach((item) => {
+      if (item.aspectRatio) ids.add(item.id);
+      item.slides?.forEach((slide) => {
+        if (slide.aspectRatio) ids.add(slide.id);
+      });
+    });
+    return ids;
+  }, [galleryItems]);
+
+  const registerAspectRatio = useCallback((id: string, width?: number, height?: number, source?: "image" | "video") => {
     if (!id || !width || !height || Number.isNaN(width) || Number.isNaN(height) || height === 0) {
+      return;
+    }
+    if (source === "video" && explicitAspectRatioIds.has(id)) {
       return;
     }
     const ratioValue = Number((width / height).toFixed(5)).toString();
     setDynamicAspectRatios((prev) => (prev[id] === ratioValue ? prev : { ...prev, [id]: ratioValue }));
-  }, []);
+  }, [explicitAspectRatioIds]);
 
   const resolveAspectRatio = useCallback(
     (item: CollageItem) => formatAspectRatio(dynamicAspectRatios[item.id] ?? item.aspectRatio),
@@ -268,7 +288,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
       </header>
 
       <section className="mx-auto max-w-6xl px-6 pb-24">
-      <div className="grid grid-cols-1 gap-6 grid-flow-row-dense sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 items-start gap-6 grid-flow-row-dense sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
          {galleryItems.map((item) => {
             const primaryMedia = item.slides?.[0] ?? item;
             const aspect = resolveAspectRatio(primaryMedia);
@@ -280,6 +300,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                 ? "lg:col-span-3 xl:col-span-3"
                 : "lg:col-span-2"
               : "";
+            const gridRowStartClass = item.gridRowStart ? gridRowStartClasses[item.gridRowStart] ?? "" : "";
             return (
               <div
                 role="button"
@@ -292,22 +313,22 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                     setActiveItem(item);
                   }
                 }}
-                className={`group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 text-left shadow-sm transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${gridSpanClass}`}
+                className={`group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 text-left shadow-sm transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${gridSpanClass} ${gridRowStartClass}`}
               >
                 <div
                   className="relative w-full"
                   style={aspect ? { aspectRatio: aspect } : undefined}
                 >
                   {item.slides && item.slides.length > 0 ? (
-                    <InlineSlideshow item={item} onAspect={(id, w, h) => registerAspectRatio(id, w, h)} />
+                    <InlineSlideshow item={item} onAspect={(id, w, h) => registerAspectRatio(id, w, h, "image")} />
                   ) : (
                     <MediaFrame
                       item={item}
                       variant="card"
                       fit="cover"
                       className="transition duration-500 group-hover:scale-[1.03]"
-                      onImageLoad={(w, h) => registerAspectRatio(item.id, w, h)}
-                      onVideoMetadata={(w, h) => registerAspectRatio(item.id, w, h)}
+                      onImageLoad={(w, h) => registerAspectRatio(item.id, w, h, "image")}
+                      onVideoMetadata={(w, h) => registerAspectRatio(item.id, w, h, "video")}
                     />
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-black/0 transition duration-300 group-hover:bg-black/35" />
@@ -371,6 +392,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                   }
                   variant="modal"
                   fit="contain"
+                  position="center"
                   className="bg-black"
                   ref={
                     activeItem.slides && activeItem.slides[modalSlideIndex]
@@ -387,7 +409,8 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                         ? activeItem.slides[modalSlideIndex].id
                         : activeItem.id,
                       w,
-                      h
+                      h,
+                      "image"
                     )
                   }
                   onVideoMetadata={(w, h) =>
@@ -396,7 +419,8 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                         ? activeItem.slides[modalSlideIndex].id
                         : activeItem.id,
                       w,
-                      h
+                      h,
+                      "video"
                     )
                   }
                 />
