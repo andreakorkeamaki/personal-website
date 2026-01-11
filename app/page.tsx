@@ -1,6 +1,7 @@
 import Hero from "../components/Hero";
 import ContactForm from "../components/ContactForm";
 import PlaystationStyleShowcase from "../components/PlaystationStyleShowcase";
+import Script from "next/script";
 
 export default function Page() {
   return (
@@ -11,11 +12,11 @@ export default function Page() {
       <section id="about" className="bg-[#F5EDCE] text-[#0F0E0E]">
         <div className="mx-auto max-w-6xl px-6 py-20">
           <h2 className="font-display text-3xl md:text-4xl">About Me</h2>
-          <p className="mt-4 font-body text-lg max-w-3xl">
-            I’m Andrea Korkeamaki, a creative developer focused on interactive 3D,
-            motion, and inventive web experiences. I blend design, code, and AI to
-            craft elegant, performant interfaces that feel alive.
-          </p>
+          <div className="mt-4 font-body text-lg max-w-3xl space-y-4">
+            <p>I’m Andrea Korkeamaki, a creative developer working across web, 3D, video, and AI.</p>
+            <p>I build visual projects, AR assets, AI-generated content, and automations, adapting tools and approaches case by case.</p>
+            <p>I studied game production and tend to learn by building and experimenting with new tools over time.</p>
+          </div>
         </div>
       </section>
 
@@ -69,6 +70,9 @@ export default function Page() {
           <span>P.IVA: 02487580561</span>
         </div>
       </footer>
+
+      <elevenlabs-convai agent-id="agent_8301keprjx37f088wdmjm4gq8ynz"></elevenlabs-convai>
+      <Script src="https://unpkg.com/@elevenlabs/convai-widget-embed" strategy="afterInteractive" />
     </main>
   );
 }

@@ -15,6 +15,7 @@ type CollageItemBase = {
   software?: string[];
   order?: number;
   gridRowStart?: number;
+  gridAlign?: "start" | "center" | "end";
 };
 
 export type CollageSlide = Omit<CollageItemBase, "slides">;
@@ -101,6 +102,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         year: "2024",
         software: ["Blender"],
         order: 3,
+        gridAlign: "center",
       },
       {
         id: "prod-exploded",
@@ -149,6 +151,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         year: "2024",
         software: ["Blender"],
         order: 11,
+        gridAlign: "end",
       },
       {
         id: "prod-loop-alt",
@@ -165,6 +168,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         year: "2024",
         software: ["Blender"],
         order: 7,
+        gridAlign: "end",
       },
       {
         id: "prod-cd-campaign",
@@ -220,7 +224,7 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
         title: "Hoon Render Series",
         src: "/projects/products/slideshow/hoon/Render_1.webp",
         thumbnail: "/projects/products/slideshow/hoon/Render_1.webp",
-        aspectRatio: "16 / 9",
+        aspectRatio: "9 / 16",
         description: "Set di render (hero, mid, wireframe) del concept Hoon.",
         year: "2024",
         software: ["Blender"],
@@ -231,21 +235,21 @@ export const CATEGORY_SHOWCASE_GALLERIES: Record<string, CategoryGallery> = {
             mediaType: "image",
             title: "Hoon Render 1",
             src: "/projects/products/slideshow/hoon/Render_1.webp",
-            aspectRatio: "16 / 9",
+            aspectRatio: "9 / 16",
           },
           {
             id: "prod-slideshow-hoon-2",
             mediaType: "image",
             title: "Hoon Render 2",
             src: "/projects/products/slideshow/hoon/Render_2.webp",
-            aspectRatio: "16 / 9",
+            aspectRatio: "9 / 16",
           },
           {
             id: "prod-slideshow-hoon-3",
             mediaType: "image",
             title: "Hoon Render 3",
             src: "/projects/products/slideshow/hoon/Render_3.webp",
-            aspectRatio: "16 / 9",
+            aspectRatio: "9 / 16",
           },
         ],
       },
