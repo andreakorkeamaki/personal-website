@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import Providers from './providers';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', weight: ['400','500','600'] });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', weight: ['700'] });
@@ -19,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body>
-        {children}
+        <Providers>{children}</Providers>
         <SpeedInsights />
       </body>
     </html>

@@ -45,6 +45,12 @@ const gridRowStartClasses: Record<number, string> = {
   4: "lg:row-start-4 xl:row-start-4",
 };
 
+const gridAlignClasses: Record<NonNullable<CollageItem["gridAlign"]>, string> = {
+  start: "self-start",
+  center: "self-center",
+  end: "self-end",
+};
+
 type InlineSlideshowProps = {
   item: CollageItem;
   onAspect?: (id: string, w?: number, h?: number) => void;
@@ -301,6 +307,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                 : "lg:col-span-2"
               : "";
             const gridRowStartClass = item.gridRowStart ? gridRowStartClasses[item.gridRowStart] ?? "" : "";
+            const gridAlignClass = item.gridAlign ? gridAlignClasses[item.gridAlign] : "";
             return (
               <div
                 role="button"
@@ -313,7 +320,7 @@ export default function CategoryTemplate({ category }: CategoryTemplateProps) {
                     setActiveItem(item);
                   }
                 }}
-                className={`group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 text-left shadow-sm transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${gridSpanClass} ${gridRowStartClass}`}
+                className={`group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-white/5 text-left shadow-sm transition duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${gridSpanClass} ${gridRowStartClass} ${gridAlignClass}`}
               >
                 <div
                   className="relative w-full"
