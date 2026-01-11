@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import type { Route } from "next";
 
 const DEBUG_NAV = false;
 const DEDUPE_WINDOW_MS = 2500;
@@ -71,7 +72,7 @@ export default function AssistantNavBridge() {
         }
       } else if (routes[key]) {
         debug("route", key, routes[key]);
-        router.push(routes[key]);
+        router.push(routes[key] as Route);
       } else {
         debug("blocked key", key);
       }
