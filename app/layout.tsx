@@ -1,13 +1,58 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { Inter, Playfair_Display } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', weight: ['400','500','600'] });
-const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', weight: ['700'] });
+const siteUrl = 'https://andreakorkeamaki.com';
+const siteTitle = 'Andrea Korkeamaki — Creative Developer';
+const siteDescription =
+  'Portfolio of Andrea Korkeamaki, a creative developer crafting interactive 3D, motion, web, and AI-powered experiences.';
 
 export const metadata: Metadata = {
-  title: 'Andrea Korkeamaki — Portfolio',
-  description: '3D • Motion • Web • AI',
+  metadataBase: new URL(siteUrl),
+  applicationName: 'Andrea Korkeamaki Portfolio',
+  title: {
+    default: siteTitle,
+    template: '%s — Andrea Korkeamaki',
+  },
+  description: siteDescription,
+  keywords: [
+    'Andrea Korkeamaki',
+    'creative developer',
+    '3D web developer',
+    'motion design',
+    'interactive portfolio',
+    'AI automations',
+    'Next.js portfolio',
+    'Three.js',
+  ],
+  authors: [{ name: 'Andrea Korkeamaki' }],
+  creator: 'Andrea Korkeamaki',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    title: siteTitle,
+    description: siteDescription,
+    siteName: 'Andrea Korkeamaki Portfolio',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary',
+    title: siteTitle,
+    description: siteDescription,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
 };
 
 export const viewport: Viewport = {
@@ -16,7 +61,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

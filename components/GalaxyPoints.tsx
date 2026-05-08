@@ -1,6 +1,6 @@
 "use client";
 import * as THREE from 'three';
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 
 type GalaxyPointsProps = {
@@ -73,7 +73,7 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     }
 
     return { positions, colors, scales, seeds };
-  }, [finalCount]);
+  }, [colorPalettes, finalCount]);
 
   // --- Shape morphing setup ---
   const basePositions = useRef<Float32Array>(positions);
@@ -98,12 +98,12 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
   const customBaseRef = useRef<Float32Array | null>(null);
 
   // Pseudo-random helper deterministic per index
-  const rnd = (i: number, k: number) => {
+  const rnd = useCallback((i: number, k: number) => {
     const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453;
     return x - Math.floor(x);
-  };
+  }, []);
 
-  const buildShapes = (offset: number) => {
+  const buildShapes = useCallback((offset: number) => {
     const count = finalCount;
     const ak = new Float32Array(count * 3);
     const sphere = new Float32Array(count * 3);
@@ -227,7 +227,7 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
     shapesRef.current.sets = [ak, sphere, torus, helix, swirl];
     shapesRef.current.idxA = 0;
     shapesRef.current.idxB = 1;
-  };
+  }, [finalCount, rnd]);
 
   useFrame(({ clock, mouse, viewport }) => {
     const t = clock.getElapsedTime();
@@ -449,7 +449,7 @@ export default function GalaxyPoints({ count = 12000 }: GalaxyPointsProps) {
       scene.remove(ptsObject);
       if (canvasEl) canvasEl.removeEventListener('dblclick', onDblClick);
     };
-  }, [scene, ptsObject]);
+  }, [backgroundColors, buildShapes, colorPalettes, gl, ptsObject, scene]);
 
   return null;
 }

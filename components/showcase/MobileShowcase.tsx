@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORIES, ShowcaseProps } from "./shared";
@@ -335,7 +336,7 @@ export default function MobileShowcase({ initialIndex = 0, className, onSelect }
                         style={{ zIndex: 200 - depth * 10 }}
                         onClick={() => setIndex(i)}
                       >
-                        <img src={project.tile || project.cover} alt={project.title} className="absolute inset-0 h-full w-full object-cover" />
+                        <Image src={project.tile || project.cover || ""} alt={project.title} fill sizes="min(82vw, 360px)" className="object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-4">
                           <div className="rounded-2xl border border-white/25 bg-white/10 backdrop-blur-md shadow-lg overflow-hidden">
