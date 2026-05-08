@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORIES, ShowcaseProps } from "./shared";
@@ -197,7 +198,7 @@ export default function DesktopShowcase({ initialIndex = 0, onOpen, className }:
                     initial={{opacity:0, y:16, scale: INACTIVE_CARD_SCALE}}
                     animate={{opacity:1, y:0, scale: activeCard ? ACTIVE_CARD_SCALE : INACTIVE_CARD_SCALE}}
                     transition={{delay: i*0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1]}}>
-                    <img src={p.tile || p.cover} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <Image src={p.tile || p.cover || ""} alt={p.title} fill sizes="230px" className="object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">
                       <p className="text-sm font-semibold line-clamp-1">{p.title}</p>

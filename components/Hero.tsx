@@ -5,9 +5,9 @@ import { Suspense } from 'react';
 
 export default function Hero() {
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-[#0F0E0E]">
+    <section className="relative min-h-svh w-full overflow-hidden bg-[#0F0E0E]" aria-labelledby="hero-heading">
       {/* 3D Background */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0" aria-hidden="true">
         <Canvas
           gl={{ powerPreference: 'high-performance', antialias: true, alpha: false }}
           dpr={[1, 2]}
@@ -31,8 +31,8 @@ export default function Hero() {
       </div>
 
       {/* Centered Text */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-6 pointer-events-none">
-        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#FFFDF6] text-shadow-soft">
+      <div className="relative z-10 flex min-h-svh flex-col items-center justify-center text-center px-6 pointer-events-none">
+        <h1 id="hero-heading" className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#FFFDF6] text-shadow-soft">
           Andrea Korkeamaki
         </h1>
         <p className="mt-4 font-body text-[#F5EDCE] text-base sm:text-lg md:text-xl">
